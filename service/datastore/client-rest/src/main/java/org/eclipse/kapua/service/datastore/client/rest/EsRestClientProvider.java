@@ -42,15 +42,17 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.ssl.TrustStrategy;
+
 import org.eclipse.kapua.commons.setting.AbstractBaseKapuaSetting;
 import org.eclipse.kapua.service.datastore.client.ClientException;
 import org.eclipse.kapua.service.datastore.client.ClientProvider;
 import org.eclipse.kapua.service.datastore.client.ClientUnavailableException;
 import org.eclipse.kapua.service.datastore.client.rest.ssl.SkipCertificateCheckTrustStrategy;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 
 /**
  * Elasticsearch rest client implementation.<br>
@@ -84,7 +86,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
 
     /**
      * Get the {@link EsRestClientProvider} instance
-     * 
+     *
      * @return
      * @throws ClientUnavailableException
      */
@@ -100,7 +102,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
      * The nodes addresses and other parameters are read from the configuration file.<br>
      * <b>NOTE. The init methods can be called more than once in order to reinitialize the underlying datastore connection. It the datastore was already initialized this method close the old one
      * before initializing the new one.</b>
-     * 
+     *
      * @return
      * @throws ClientUnavailableException
      */
@@ -119,7 +121,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
      * The nodes addresses and other parameters are overwritten with the provided settings.<br>
      * <b>NOTE. The init methods can be called more than once in order to reinitialize the underlying datastore connection. It the datastore was already initialized this method close the old one
      * before initializing the new one.</b>
-     * 
+     *
      * @param settings
      * @throws ClientException
      */
@@ -136,9 +138,8 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
      * Initialize the {@link EsRestClientProvider} singleton instance.<br>
      * <b>NOTE. The init methods can be called more than once in order to reinitialize the underlying datastore connection. It the datastore was already initialized this method close the old one
      * before initializing the new one.</b>
-     * 
-     * @param addresses
-     *            nodes addresses list
+     *
+     * @param addresses nodes addresses list
      * @throws ClientException
      */
     public static void init(List<InetSocketAddress> addresses) throws ClientException {
@@ -159,7 +160,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
 
     /**
      * Close the ES rest client
-     * 
+     *
      * @throws ClientUnavailableException
      */
     public static void close() throws ClientUnavailableException {
@@ -197,7 +198,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
 
     /**
      * Create the Elasticsearch rest client based on the provided configuration settings
-     * 
+     *
      * @param settings
      * @throws ClientUnavailableException
      */
@@ -207,7 +208,7 @@ public class EsRestClientProvider implements ClientProvider<RestClient> {
 
     /**
      * Create the Elasticsearch rest client based on the provided configuration addresses
-     * 
+     *
      * @param addresses
      * @throws ClientUnavailableException
      */
