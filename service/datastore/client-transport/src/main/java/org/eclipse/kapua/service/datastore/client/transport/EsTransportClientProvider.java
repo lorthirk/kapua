@@ -26,7 +26,7 @@ import org.eclipse.kapua.service.datastore.client.ClientUnavailableException;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,7 +198,7 @@ public class EsTransportClientProvider implements ClientProvider<Client> {
 
             Settings settings = Settings.builder().put(KEY_ES_CLUSTER_NAME, clustername).build();
             client = new PreBuiltTransportClient(settings);
-            addresses.stream().map(InetSocketTransportAddress::new).forEachOrdered(client::addTransportAddress);
+            addresses.stream().map(TransportAddress::new).forEachOrdered(client::addTransportAddress);
             // ES 2.3.4 version
             // Settings settings = Settings.settingsBuilder().put("cluster.name", clustername).build();
             // TransportClient client = TransportClient.builder().settings(settings).build();

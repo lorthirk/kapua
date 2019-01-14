@@ -57,13 +57,13 @@ import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.common.xcontent.LoggingDeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.VersionType;
-import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.indices.InvalidIndexNameException;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -239,7 +239,7 @@ public class TransportDatastoreClient extends AbstractDatastoreClient<Client> {
         ResultList<T> result = new ResultList<T>(totalCount);
         if (searchHits != null) {
             for (SearchHit searchHit : searchHits) {
-                Map<String, Object> object = searchHit.getSource();
+                Map<String, Object> object = searchHit.getSourceAsMap();
                 object.put(ModelContext.TYPE_DESCRIPTOR_KEY, new TypeDescriptor(searchHit.getIndex(), searchHit.getType()));
                 object.put(ModelContext.DATASTORE_ID_KEY, searchHit.getId());
                 object.put(QueryConverter.QUERY_FETCH_STYLE_KEY, queryFetchStyle);
@@ -323,10 +323,10 @@ public class TransportDatastoreClient extends AbstractDatastoreClient<Client> {
                 }
 
                 BulkRequest bulkRequest = new BulkRequest();
-                for (SearchHit hit : scrollResponse.getHits().hits()) {
-                    DeleteRequest delete = new DeleteRequest().index(hit.index())
-                            .type(hit.type())
-                            .id(hit.id());
+                for (SearchHit hit : scrollResponse.getHits().getHits()) {
+                    DeleteRequest delete = new DeleteRequest().index(hit.getIndex())
+                            .type(hit.getType())
+                            .id(hit.getId());
                     bulkRequest.add(delete);
                 }
 
@@ -426,8 +426,8 @@ public class TransportDatastoreClient extends AbstractDatastoreClient<Client> {
             searchSourceBuilder = new SearchSourceBuilder();
             SearchModule searchModule = new SearchModule(Settings.EMPTY, false, Collections.emptyList());
             XContentParser parser = XContentFactory.xContent(XContentType.JSON)
-                    .createParser(new NamedXContentRegistry(searchModule.getNamedXContents()), content);
-            searchSourceBuilder.parseXContent(new QueryParseContext(parser));
+                    .createParser(new NamedXContentRegistry(searchModule.getNamedXContents()), LoggingDeprecationHandler.INSTANCE, content);
+            searchSourceBuilder.parseXContent(parser);
             logger.debug("Search builder: {}", searchSourceBuilder);
             return searchSourceBuilder;
         } catch (Throwable t) {
