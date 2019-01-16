@@ -12,7 +12,7 @@
 package org.eclipse.kapua.service.datastore.internal.mediator;
 
 import org.eclipse.kapua.model.id.KapuaId;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.model.ClientInfo;
 import org.eclipse.kapua.service.datastore.model.StorableId;
 import org.eclipse.kapua.service.datastore.model.query.StorableField;
@@ -29,19 +29,19 @@ public enum ClientInfoField implements StorableField {
     /**
      * Scope id
      */
-    SCOPE_ID(ClientInfoSchema.CLIENT_SCOPE_ID),
+    SCOPE_ID(InfoSchema.SCOPE_ID),
     /**
      * Client identifier
      */
-    CLIENT_ID(ClientInfoSchema.CLIENT_ID),
+    CLIENT_ID(InfoSchema.CLIENT_ID),
     /**
      * Timestamp
      */
-    TIMESTAMP(ClientInfoSchema.CLIENT_TIMESTAMP),
+    TIMESTAMP(InfoSchema.TIMESTAMP),
     /**
      * Message identifier
      */
-    MESSAGE_ID(ClientInfoSchema.CLIENT_MESSAGE_ID);
+    MESSAGE_ID(InfoSchema.MESSAGE_ID);
 
     private String field;
 

@@ -35,8 +35,8 @@ import org.eclipse.kapua.service.datastore.internal.model.query.ExistsPredicateI
 import org.eclipse.kapua.service.datastore.internal.model.query.MessageQueryImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.RangePredicateImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.StorableFieldImpl;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.MessageSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.MetricInfoSchema;
 import org.eclipse.kapua.service.datastore.model.MessageListResult;
 import org.eclipse.kapua.service.datastore.model.MetricInfo;
 import org.eclipse.kapua.service.datastore.model.MetricInfoListResult;
@@ -199,7 +199,7 @@ public class MetricInfoRegistryServiceImpl extends AbstractKapuaService implemen
         messageQuery.setOffset(0);
         messageQuery.setSortFields(sort);
 
-        RangePredicate messageIdPredicate = new RangePredicateImpl(new StorableFieldImpl(MetricInfoSchema.METRIC_MTR_TIMESTAMP), metricInfo.getFirstMessageOn(), null);
+        RangePredicate messageIdPredicate = new RangePredicateImpl(new StorableFieldImpl(InfoSchema.TIMESTAMP), metricInfo.getFirstMessageOn(), null);
         TermPredicate clientIdPredicate = storablePredicateFactory.newTermPredicate(MessageField.CLIENT_ID, metricInfo.getClientId());
         ExistsPredicate metricPredicate = new ExistsPredicateImpl(MessageField.METRICS.field(), metricInfo.getName());
 

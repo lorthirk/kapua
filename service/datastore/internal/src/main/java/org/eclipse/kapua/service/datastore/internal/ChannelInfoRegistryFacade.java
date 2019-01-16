@@ -32,7 +32,7 @@ import org.eclipse.kapua.service.datastore.internal.model.ChannelInfoListResultI
 import org.eclipse.kapua.service.datastore.internal.model.StorableIdImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.ChannelInfoQueryImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.IdsPredicateImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.Metadata;
 import org.eclipse.kapua.service.datastore.internal.schema.SchemaUtil;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
@@ -107,7 +107,7 @@ public class ChannelInfoRegistryFacade {
                         Metadata metadata = mediator.getMetadata(channelInfo.getScopeId(), channelInfo.getFirstMessageOn().getTime());
                         String registryIndexName = metadata.getRegistryIndexName();
 
-                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), ChannelInfoSchema.CHANNEL_TYPE_NAME),
+                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), InfoSchema.INFO_TYPE_NAME),
                                 channelInfo);
                         response = client.upsert(request);
 
@@ -116,7 +116,7 @@ public class ChannelInfoRegistryFacade {
                             throw new ClientException(ClientErrorCodes.ACTION_ERROR, String.format(ClientErrorMessages.CRUD_INTERNAL_ERROR, "ChannelInfoRegistry - upstore"));
                         }
                         logger.debug(String.format("Upsert on channel succesfully executed [%s.%s, %s]",
-                                registryIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME, channelInfoId));
+                                registryIndexName, InfoSchema.CHANNEL_TYPE_NAME, channelInfoId));
                     }
                     // Update cache if channel update is completed successfully
                     DatastoreCacheManager.getInstance().getChannelsCache().put(channelInfoId, true);
@@ -157,7 +157,7 @@ public class ChannelInfoRegistryFacade {
         ChannelInfo channelInfo = find(scopeId, id);
         if (channelInfo != null) {
             mediator.onBeforeChannelInfoDelete(channelInfo);
-            TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+            TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
             client.delete(typeDescriptor, id.toString());
         }
     }
@@ -184,7 +184,7 @@ public class ChannelInfoRegistryFacade {
         ChannelInfoQueryImpl idsQuery = new ChannelInfoQueryImpl(scopeId);
         idsQuery.setLimit(1);
 
-        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(ChannelInfoSchema.CHANNEL_TYPE_NAME);
+        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(InfoSchema.CHANNEL_TYPE_NAME);
         idsPredicate.addValue(id);
         idsQuery.setPredicate(idsPredicate);
 
@@ -219,7 +219,7 @@ public class ChannelInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         return new ChannelInfoListResultImpl(client.query(typeDescriptor, query, ChannelInfo.class));
     }
 
@@ -250,7 +250,7 @@ public class ChannelInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
 
@@ -287,7 +287,7 @@ public class ChannelInfoRegistryFacade {
         for (ChannelInfo channelInfo : channels.getItems()) {
             mediator.onBeforeChannelInfoDelete(channelInfo);
         }
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         client.deleteByQuery(typeDescriptor, query);
     }
 

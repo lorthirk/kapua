@@ -37,10 +37,8 @@ import org.eclipse.kapua.service.datastore.internal.model.ClientInfoImpl;
 import org.eclipse.kapua.service.datastore.internal.model.DatastoreMessageImpl;
 import org.eclipse.kapua.service.datastore.internal.model.MetricInfoImpl;
 import org.eclipse.kapua.service.datastore.internal.model.StorableIdImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.MessageSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.MetricInfoSchema;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.ClientInfo;
 import org.eclipse.kapua.service.datastore.model.DatastoreMessage;
@@ -240,18 +238,18 @@ public class ModelContextImpl implements ModelContext {
 
     private MetricInfo unmarshalMetricInfo(Map<String, Object> metricInfoMap)
             throws DatamodelMappingException, JsonParseException, JsonMappingException, IOException, ParseException {
-        KapuaId scopeId = new KapuaEid(new BigInteger((String) metricInfoMap.get(MetricInfoSchema.METRIC_SCOPE_ID)));
+        KapuaId scopeId = new KapuaEid(new BigInteger((String) metricInfoMap.get(InfoSchema.SCOPE_ID)));
         MetricInfo metricInfo = new MetricInfoImpl(scopeId);
         String id = (String) metricInfoMap.get(ModelContext.DATASTORE_ID_KEY);
         metricInfo.setId(new StorableIdImpl(id));
         @SuppressWarnings("unchecked")
-        Map<String, Object> metricMap = (Map<String, Object>) metricInfoMap.get(MetricInfoSchema.METRIC_MTR);
-        String name = (String) metricMap.get(MetricInfoSchema.METRIC_MTR_NAME);
-        String type = (String) metricMap.get(MetricInfoSchema.METRIC_MTR_TYPE);
-        String lastMsgTimestamp = (String) metricMap.get(MetricInfoSchema.METRIC_MTR_TIMESTAMP);
-        String lastMsgId = (String) metricMap.get(MetricInfoSchema.METRIC_MTR_MSG_ID);
-        String clientId = (String) metricInfoMap.get(MetricInfoSchema.METRIC_CLIENT_ID);
-        String channel = (String) metricInfoMap.get(MetricInfoSchema.METRIC_CHANNEL);
+        Map<String, Object> metricMap = (Map<String, Object>) metricInfoMap.get(InfoSchema.METRIC_MTR);
+        String name = (String) metricMap.get(InfoSchema.METRIC_MTR_NAME);
+        String type = (String) metricMap.get(InfoSchema.METRIC_MTR_TYPE);
+        String lastMsgTimestamp = (String) metricMap.get(InfoSchema.METRIC_MTR_TIMESTAMP);
+        String lastMsgId = (String) metricMap.get(InfoSchema.METRIC_MTR_MSG_ID);
+        String clientId = (String) metricInfoMap.get(InfoSchema.CLIENT_ID);
+        String channel = (String) metricInfoMap.get(InfoSchema.CHANNEL);
         metricInfo.setClientId(clientId);
         metricInfo.setChannel(channel);
         metricInfo.setFirstMessageId(new StorableIdImpl(lastMsgId));
@@ -265,26 +263,26 @@ public class ModelContextImpl implements ModelContext {
 
     private ChannelInfo unmarshalChannelInfo(Map<String, Object> channelInfoMap)
             throws DatamodelMappingException, JsonParseException, JsonMappingException, IOException, ParseException {
-        KapuaId scopeId = new KapuaEid(new BigInteger((String) channelInfoMap.get(ChannelInfoSchema.CHANNEL_SCOPE_ID)));
+        KapuaId scopeId = new KapuaEid(new BigInteger((String) channelInfoMap.get(InfoSchema.SCOPE_ID)));
         ChannelInfo channelInfo = new ChannelInfoImpl(scopeId);
         String id = (String) channelInfoMap.get(ModelContext.DATASTORE_ID_KEY);
         channelInfo.setId(new StorableIdImpl(id));
-        channelInfo.setClientId((String) channelInfoMap.get(ChannelInfoSchema.CHANNEL_CLIENT_ID));
-        channelInfo.setName((String) channelInfoMap.get(ChannelInfoSchema.CHANNEL_NAME));
-        channelInfo.setFirstMessageId(new StorableIdImpl((String) channelInfoMap.get(ChannelInfoSchema.CHANNEL_MESSAGE_ID)));
-        channelInfo.setFirstMessageOn(KapuaDateUtils.parseDate((String) channelInfoMap.get(ChannelInfoSchema.CHANNEL_TIMESTAMP)));
+        channelInfo.setClientId((String) channelInfoMap.get(InfoSchema.CLIENT_ID));
+        channelInfo.setName((String) channelInfoMap.get(InfoSchema.CHANNEL));
+        channelInfo.setFirstMessageId(new StorableIdImpl((String) channelInfoMap.get(InfoSchema.MESSAGE_ID)));
+        channelInfo.setFirstMessageOn(KapuaDateUtils.parseDate((String) channelInfoMap.get(InfoSchema.TIMESTAMP)));
         return channelInfo;
     }
 
     private ClientInfo unmarshalClientInfo(Map<String, Object> clientInfoMap)
             throws DatamodelMappingException, JsonParseException, JsonMappingException, IOException, ParseException {
-        KapuaId scopeId = new KapuaEid(new BigInteger((String) clientInfoMap.get(ClientInfoSchema.CLIENT_SCOPE_ID)));
+        KapuaId scopeId = new KapuaEid(new BigInteger((String) clientInfoMap.get(InfoSchema.SCOPE_ID)));
         ClientInfo clientInfo = new ClientInfoImpl(scopeId);
         String id = (String) clientInfoMap.get(ModelContext.DATASTORE_ID_KEY);
         clientInfo.setId(new StorableIdImpl(id));
-        clientInfo.setClientId((String) clientInfoMap.get(ClientInfoSchema.CLIENT_ID));
-        clientInfo.setFirstMessageId(new StorableIdImpl((String) clientInfoMap.get(ClientInfoSchema.CLIENT_MESSAGE_ID)));
-        clientInfo.setFirstMessageOn(KapuaDateUtils.parseDate((String) clientInfoMap.get(ClientInfoSchema.CLIENT_TIMESTAMP)));
+        clientInfo.setClientId((String) clientInfoMap.get(InfoSchema.CLIENT_ID));
+        clientInfo.setFirstMessageId(new StorableIdImpl((String) clientInfoMap.get(InfoSchema.MESSAGE_ID)));
+        clientInfo.setFirstMessageOn(KapuaDateUtils.parseDate((String) clientInfoMap.get(InfoSchema.TIMESTAMP)));
         return clientInfo;
     }
 
@@ -359,34 +357,34 @@ public class ModelContextImpl implements ModelContext {
 
     private Map<String, Object> marshalClientInfo(ClientInfo clientInfo) throws ParseException {
         Map<String, Object> unmarshalledClientInfo = new HashMap<>();
-        unmarshalledClientInfo.put(ClientInfoSchema.CLIENT_ID, clientInfo.getClientId());
-        unmarshalledClientInfo.put(ClientInfoSchema.CLIENT_MESSAGE_ID, clientInfo.getFirstMessageId().toString());
-        unmarshalledClientInfo.put(ClientInfoSchema.CLIENT_TIMESTAMP, KapuaDateUtils.formatDate(clientInfo.getFirstMessageOn()));
-        unmarshalledClientInfo.put(ClientInfoSchema.CLIENT_SCOPE_ID, clientInfo.getScopeId().toStringId());
+        unmarshalledClientInfo.put(InfoSchema.CLIENT_ID, clientInfo.getClientId());
+        unmarshalledClientInfo.put(InfoSchema.MESSAGE_ID, clientInfo.getFirstMessageId().toString());
+        unmarshalledClientInfo.put(InfoSchema.TIMESTAMP, KapuaDateUtils.formatDate(clientInfo.getFirstMessageOn()));
+        unmarshalledClientInfo.put(InfoSchema.SCOPE_ID, clientInfo.getScopeId().toStringId());
         return unmarshalledClientInfo;
     }
 
     private Map<String, Object> marshalChannelInfo(ChannelInfo channelInfo) throws ParseException {
         Map<String, Object> unmarshalledChannelInfo = new HashMap<>();
-        unmarshalledChannelInfo.put(ChannelInfoSchema.CHANNEL_NAME, channelInfo.getName());
-        unmarshalledChannelInfo.put(ChannelInfoSchema.CHANNEL_TIMESTAMP, KapuaDateUtils.formatDate(channelInfo.getFirstMessageOn()));
-        unmarshalledChannelInfo.put(ChannelInfoSchema.CHANNEL_CLIENT_ID, channelInfo.getClientId());
-        unmarshalledChannelInfo.put(ChannelInfoSchema.CHANNEL_SCOPE_ID, channelInfo.getScopeId().toStringId());
-        unmarshalledChannelInfo.put(ChannelInfoSchema.CHANNEL_MESSAGE_ID, channelInfo.getFirstMessageId().toString());
+        unmarshalledChannelInfo.put(InfoSchema.CHANNEL, channelInfo.getName());
+        unmarshalledChannelInfo.put(InfoSchema.TIMESTAMP, KapuaDateUtils.formatDate(channelInfo.getFirstMessageOn()));
+        unmarshalledChannelInfo.put(InfoSchema.CLIENT_ID, channelInfo.getClientId());
+        unmarshalledChannelInfo.put(InfoSchema.SCOPE_ID, channelInfo.getScopeId().toStringId());
+        unmarshalledChannelInfo.put(InfoSchema.MESSAGE_ID, channelInfo.getFirstMessageId().toString());
         return unmarshalledChannelInfo;
     }
 
     private Map<String, Object> marshalMetricInfo(MetricInfo metricInfo) throws ParseException {
         Map<String, Object> unmarshalledMetricInfo = new HashMap<>();
-        unmarshalledMetricInfo.put(MetricInfoSchema.METRIC_SCOPE_ID, metricInfo.getScopeId().toStringId());
-        unmarshalledMetricInfo.put(MetricInfoSchema.METRIC_CLIENT_ID, metricInfo.getClientId());
-        unmarshalledMetricInfo.put(MetricInfoSchema.METRIC_CHANNEL, metricInfo.getChannel());
+        unmarshalledMetricInfo.put(InfoSchema.SCOPE_ID, metricInfo.getScopeId().toStringId());
+        unmarshalledMetricInfo.put(InfoSchema.CLIENT_ID, metricInfo.getClientId());
+        unmarshalledMetricInfo.put(InfoSchema.CHANNEL, metricInfo.getChannel());
         Map<String, Object> unmarshalledMetricValue = new HashMap<>();
-        unmarshalledMetricValue.put(MetricInfoSchema.METRIC_MTR_NAME, metricInfo.getName());
-        unmarshalledMetricValue.put(MetricInfoSchema.METRIC_MTR_TYPE, DatastoreUtils.convertToClientMetricType(metricInfo.getMetricType()));
-        unmarshalledMetricValue.put(MetricInfoSchema.METRIC_MTR_TIMESTAMP, KapuaDateUtils.formatDate(metricInfo.getFirstMessageOn()));
-        unmarshalledMetricValue.put(MetricInfoSchema.METRIC_MTR_MSG_ID, metricInfo.getFirstMessageId().toString());
-        unmarshalledMetricInfo.put(MetricInfoSchema.METRIC_MTR, unmarshalledMetricValue);
+        unmarshalledMetricValue.put(InfoSchema.METRIC_MTR_NAME, metricInfo.getName());
+        unmarshalledMetricValue.put(InfoSchema.METRIC_MTR_TYPE, DatastoreUtils.convertToClientMetricType(metricInfo.getMetricType()));
+        unmarshalledMetricValue.put(InfoSchema.METRIC_MTR_TIMESTAMP, KapuaDateUtils.formatDate(metricInfo.getFirstMessageOn()));
+        unmarshalledMetricValue.put(InfoSchema.METRIC_MTR_MSG_ID, metricInfo.getFirstMessageId().toString());
+        unmarshalledMetricInfo.put(InfoSchema.METRIC_MTR, unmarshalledMetricValue);
         return unmarshalledMetricInfo;
     }
 

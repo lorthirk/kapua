@@ -12,7 +12,7 @@
 package org.eclipse.kapua.service.datastore.internal.mediator;
 
 import org.eclipse.kapua.model.id.KapuaId;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.ChannelInfoCreator;
 import org.eclipse.kapua.service.datastore.model.StorableId;
@@ -28,23 +28,23 @@ public enum ChannelInfoField implements StorableField {
     /**
      * Channel
      */
-    CHANNEL(ChannelInfoSchema.CHANNEL_NAME),
+    CHANNEL(InfoSchema.CHANNEL),
     /**
      * Client identifier
      */
-    CLIENT_ID(ChannelInfoSchema.CHANNEL_CLIENT_ID),
+    CLIENT_ID(InfoSchema.CLIENT_ID),
     /**
      * Scope id
      */
-    SCOPE_ID(ChannelInfoSchema.CHANNEL_SCOPE_ID),
+    SCOPE_ID(InfoSchema.SCOPE_ID),
     /**
      * Timestamp
      */
-    TIMESTAMP(ChannelInfoSchema.CHANNEL_TIMESTAMP),
+    TIMESTAMP(InfoSchema.TIMESTAMP),
     /**
      * Message identifier
      */
-    MESSAGE_ID(ChannelInfoSchema.CHANNEL_MESSAGE_ID);
+    MESSAGE_ID(InfoSchema.MESSAGE_ID);
 
     private String field;
 

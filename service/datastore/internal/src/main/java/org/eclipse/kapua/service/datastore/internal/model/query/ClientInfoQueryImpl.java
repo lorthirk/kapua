@@ -16,7 +16,7 @@ import java.util.Collections;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.service.datastore.internal.AbstractStorableQuery;
 import org.eclipse.kapua.service.datastore.internal.mediator.ClientInfoField;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.model.ClientInfo;
 import org.eclipse.kapua.service.datastore.model.query.ClientInfoQuery;
 import org.eclipse.kapua.service.datastore.model.query.SortField;
@@ -24,21 +24,21 @@ import org.eclipse.kapua.service.datastore.model.query.StorableFetchStyle;
 
 /**
  * Client information query implementation
- * 
+ *
  * @since 1.0.0
  */
 public class ClientInfoQueryImpl extends AbstractStorableQuery<ClientInfo> implements ClientInfoQuery {
 
     /**
      * Constructor
-     * 
+     *
      * @param scopeId
-     * 
+     *
      * @since 1.0.0
      */
     public ClientInfoQueryImpl(KapuaId scopeId) {
         super(scopeId);
-        setSortFields(Collections.singletonList(SortField.ascending(ClientInfoSchema.CLIENT_ID)));
+        setSortFields(Collections.singletonList(SortField.ascending(InfoSchema.CLIENT_ID)));
     }
 
     @Override

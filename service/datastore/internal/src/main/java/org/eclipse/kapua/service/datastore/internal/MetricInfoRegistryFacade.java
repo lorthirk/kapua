@@ -35,7 +35,7 @@ import org.eclipse.kapua.service.datastore.internal.model.MetricInfoListResultIm
 import org.eclipse.kapua.service.datastore.internal.model.StorableIdImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.IdsPredicateImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.MetricInfoQueryImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.MetricInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.Metadata;
 import org.eclipse.kapua.service.datastore.internal.schema.SchemaUtil;
 import org.eclipse.kapua.service.datastore.model.MetricInfo;
@@ -102,7 +102,7 @@ public class MetricInfoRegistryFacade {
                 Metadata metadata = mediator.getMetadata(metricInfo.getScopeId(), metricInfo.getFirstMessageOn().getTime());
                 String kapuaIndexName = metadata.getRegistryIndexName();
 
-                UpdateRequest request = new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo);
+                UpdateRequest request = new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), InfoSchema.INFO_TYPE_NAME), metricInfo);
                 response = client.upsert(request);
 
                 if (!metricInfoId.equals(response.getId())) {
@@ -110,7 +110,7 @@ public class MetricInfoRegistryFacade {
                     throw new ClientException(ClientErrorCodes.ACTION_ERROR, String.format(ClientErrorMessages.CRUD_INTERNAL_ERROR, "MetricInfoRegistry - upstore"));
                 }
                 logger.debug(String.format("Upsert on metric succesfully executed [%s.%s, %s]",
-                        kapuaIndexName, MetricInfoSchema.METRIC_TYPE_NAME, metricInfoId));
+                        kapuaIndexName, InfoSchema.METRIC_TYPE_NAME, metricInfoId));
                 // Update cache if channel update is completed successfully
             }
             DatastoreCacheManager.getInstance().getMetricsCache().put(metricInfoId, true);
@@ -149,7 +149,7 @@ public class MetricInfoRegistryFacade {
                 performUpdate = true;
                 Metadata metadata = mediator.getMetadata(metricInfo.getScopeId(), metricInfo.getFirstMessageOn().getTime());
                 bulkRequest.add(
-                        new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo));
+                        new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), InfoSchema.INFO_TYPE_NAME), metricInfo));
             }
         }
 
@@ -214,7 +214,7 @@ public class MetricInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(scopeId);
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         client.delete(typeDescriptor, id.toString());
     }
 
@@ -240,7 +240,7 @@ public class MetricInfoRegistryFacade {
         MetricInfoQueryImpl idsQuery = new MetricInfoQueryImpl(scopeId);
         idsQuery.setLimit(1);
 
-        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(MetricInfoSchema.METRIC_TYPE_NAME);
+        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(InfoSchema.METRIC_TYPE_NAME);
         idsPredicate.addValue(id);
         idsQuery.setPredicate(idsPredicate);
 
@@ -275,7 +275,7 @@ public class MetricInfoRegistryFacade {
         }
 
         String indexNme = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexNme, MetricInfoSchema.METRIC_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexNme, InfoSchema.INFO_TYPE_NAME);
         ResultList<MetricInfo> result = client.query(typeDescriptor, query, MetricInfo.class);
         return new MetricInfoListResultImpl(result);
     }
@@ -307,7 +307,7 @@ public class MetricInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
 
@@ -338,7 +338,7 @@ public class MetricInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         client.deleteByQuery(typeDescriptor, query);
     }
 }

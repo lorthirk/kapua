@@ -72,10 +72,8 @@ import org.eclipse.kapua.service.datastore.internal.mediator.MetricInfoField;
 import org.eclipse.kapua.service.datastore.internal.model.DataIndexBy;
 import org.eclipse.kapua.service.datastore.internal.model.MetricsIndexBy;
 import org.eclipse.kapua.service.datastore.internal.model.query.MessageQueryImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.MessageSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.MetricInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.setting.DatastoreSettingKey;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.ChannelInfoListResult;
@@ -2184,7 +2182,7 @@ public class DatastoreSteps extends TestBase {
 
         List<OrderConstraint<?>> sort = new ArrayList<>();
 
-        sort.add(orderConstraint(SortField.ascending(MetricInfoSchema.METRIC_MTR_NAME_FULL), String.class));
+        sort.add(orderConstraint(SortField.ascending(InfoSchema.METRIC_MTR_NAME_FULL), String.class));
 
         return sort;
     }
@@ -2480,7 +2478,7 @@ public class DatastoreSteps extends TestBase {
         query.setLimit(limit);
         query.setOffset(0);
         List<SortField> order = new ArrayList<>();
-        order.add(SortField.descending(ChannelInfoSchema.CHANNEL_TIMESTAMP));
+        order.add(SortField.descending(InfoSchema.TIMESTAMP));
         query.setSortFields(order);
 
         return query;
@@ -2503,7 +2501,7 @@ public class DatastoreSteps extends TestBase {
         query.setLimit(limit);
         query.setOffset(0);
         List<SortField> order = new ArrayList<>();
-        order.add(SortField.descending(MetricInfoSchema.METRIC_MTR_TIMESTAMP));
+        order.add(SortField.descending(InfoSchema.METRIC_MTR_TIMESTAMP));
         query.setSortFields(order);
 
         return query;
@@ -2526,7 +2524,7 @@ public class DatastoreSteps extends TestBase {
         query.setLimit(limit);
         query.setOffset(0);
         List<SortField> order = new ArrayList<>();
-        order.add(SortField.descending(ClientInfoSchema.CLIENT_TIMESTAMP));
+        order.add(SortField.descending(InfoSchema.TIMESTAMP));
         query.setSortFields(order);
 
         return query;

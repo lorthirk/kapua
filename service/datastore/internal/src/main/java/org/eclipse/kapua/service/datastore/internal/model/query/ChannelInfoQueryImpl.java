@@ -16,7 +16,7 @@ import java.util.Collections;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.service.datastore.internal.AbstractStorableQuery;
 import org.eclipse.kapua.service.datastore.internal.mediator.ChannelInfoField;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.query.ChannelInfoQuery;
 import org.eclipse.kapua.service.datastore.model.query.SortField;
@@ -24,7 +24,7 @@ import org.eclipse.kapua.service.datastore.model.query.StorableFetchStyle;
 
 /**
  * Channel information query implementation
- * 
+ *
  * @since 1.0.0
  *
  */
@@ -32,14 +32,14 @@ public class ChannelInfoQueryImpl extends AbstractStorableQuery<ChannelInfo> imp
 
     /**
      * Constructor.
-     * 
+     *
      * @param scopeId
-     * 
+     *
      * @since 1.0.0
      */
     public ChannelInfoQueryImpl(KapuaId scopeId) {
         super(scopeId);
-        setSortFields(Collections.singletonList(SortField.ascending(ChannelInfoSchema.CHANNEL_NAME)));
+        setSortFields(Collections.singletonList(SortField.ascending(InfoSchema.CHANNEL_TYPE_NAME)));
     }
 
     @Override

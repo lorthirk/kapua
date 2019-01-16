@@ -51,11 +51,9 @@ import org.eclipse.kapua.service.datastore.internal.model.query.ClientInfoQueryI
 import org.eclipse.kapua.service.datastore.internal.model.query.IdsPredicateImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.MessageQueryImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.MetricInfoQueryImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.MessageSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.Metadata;
-import org.eclipse.kapua.service.datastore.internal.schema.MetricInfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.SchemaUtil;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.ClientInfo;
@@ -393,7 +391,7 @@ public final class MessageStoreFacade {
 
         // Remove metrics
         while (totalHits > 0) {
-            TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, MetricInfoSchema.METRIC_TYPE_NAME);
+            TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
             ResultList<MetricInfo> metrics = client.query(typeDescriptor, metricQuery, MetricInfo.class);
 
             totalHits = metrics.getTotalCount();
@@ -412,7 +410,7 @@ public final class MessageStoreFacade {
             }
         }
         logger.debug("Removed cached channel metrics for: {}", channel);
-        TypeDescriptor typeMetricDescriptor = new TypeDescriptor(dataIndexName, MetricInfoSchema.METRIC_TYPE_NAME);
+        TypeDescriptor typeMetricDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
         client.deleteByQuery(typeMetricDescriptor, metricQuery);
         logger.debug("Removed channel metrics for: {}", channel);
         ChannelInfoQueryImpl channelQuery = new ChannelInfoQueryImpl(scopeId);
@@ -426,7 +424,7 @@ public final class MessageStoreFacade {
         offset = 0;
         totalHits = 1;
         while (totalHits > 0) {
-            TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+            TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
             ResultList<ChannelInfo> channels = client.query(typeDescriptor, channelQuery, ChannelInfo.class);
 
             totalHits = channels.getTotalCount();
@@ -445,7 +443,7 @@ public final class MessageStoreFacade {
         }
 
         logger.debug("Removed cached channels for: {}", channel);
-        TypeDescriptor typeChannelDescriptor = new TypeDescriptor(dataIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
+        TypeDescriptor typeChannelDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
         client.deleteByQuery(typeChannelDescriptor, channelQuery);
 
         logger.debug("Removed channels for: {}", channel);
@@ -460,7 +458,7 @@ public final class MessageStoreFacade {
             offset = 0;
             totalHits = 1;
             while (totalHits > 0) {
-                TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+                TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
                 ResultList<ClientInfo> clients = client.query(typeDescriptor, clientInfoQuery, ClientInfo.class);
 
                 totalHits = clients.getTotalCount();
@@ -479,7 +477,7 @@ public final class MessageStoreFacade {
             }
 
             logger.debug("Removed cached clients for: {}", channel);
-            TypeDescriptor typeClientDescriptor = new TypeDescriptor(dataIndexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+            TypeDescriptor typeClientDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
             client.deleteByQuery(typeClientDescriptor, clientInfoQuery);
 
             logger.debug("Removed clients for: {}", channel);

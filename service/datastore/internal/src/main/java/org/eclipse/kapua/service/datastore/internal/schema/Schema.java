@@ -98,9 +98,7 @@ public class Schema {
                 datastoreClient.createIndex(registryIndexName, getMappingSchema(registryIndexName));
                 LOG.info("Metadata index created: " + registryIndexExistsResponse);
 
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME), ChannelInfoSchema.getChannelTypeSchema(enableAllField, enableSourceField));
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, MetricInfoSchema.METRIC_TYPE_NAME), MetricInfoSchema.getMetricTypeSchema(enableAllField, enableSourceField));
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, ClientInfoSchema.CLIENT_TYPE_NAME), ClientInfoSchema.getClientTypeSchema(enableAllField, enableSourceField));
+                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, InfoSchema.INFO_TYPE_NAME), InfoSchema.getInfoTypeSchema(enableAllField, enableSourceField));
             }
 
             currentMetadata = new Metadata(dataIndexName, registryIndexName);
@@ -175,7 +173,7 @@ public class Schema {
             Metric metric = esMetric.getValue();
             metricMapping = SchemaUtil.getField(new KeyValueEntry[]{ new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, SchemaKeys.VALUE_TRUE) });
 
-            ObjectNode matricMappingPropertiesNode = SchemaUtil.getObjectNode(); // properties (inside metric name)
+            ObjectNode metricMappingPropertiesNode = SchemaUtil.getObjectNode(); // properties (inside metric name)
             ObjectNode valueMappingNode;
 
             switch (metric.getType()) {
@@ -192,8 +190,8 @@ public class Schema {
                     break;
             }
 
-            matricMappingPropertiesNode.set(DatastoreUtils.getClientMetricFromAcronym(metric.getType()), valueMappingNode);
-            metricMapping.set(SchemaKeys.FIELD_NAME_PROPERTIES, matricMappingPropertiesNode);
+            metricMappingPropertiesNode.set(DatastoreUtils.getClientMetricFromAcronym(metric.getType()), valueMappingNode);
+            metricMapping.set(SchemaKeys.FIELD_NAME_PROPERTIES, metricMappingPropertiesNode);
             metricsPropertiesNode.set(metric.getName(), metricMapping);
         }
         return typeNode;

@@ -32,7 +32,7 @@ import org.eclipse.kapua.service.datastore.internal.model.ClientInfoListResultIm
 import org.eclipse.kapua.service.datastore.internal.model.StorableIdImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.ClientInfoQueryImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.IdsPredicateImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ClientInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.Metadata;
 import org.eclipse.kapua.service.datastore.internal.schema.SchemaUtil;
 import org.eclipse.kapua.service.datastore.model.ClientInfo;
@@ -108,7 +108,7 @@ public class ClientInfoRegistryFacade {
                         Metadata metadata = mediator.getMetadata(clientInfo.getScopeId(), clientInfo.getFirstMessageOn().getTime());
                         String kapuaIndexName = metadata.getRegistryIndexName();
 
-                        UpdateRequest request = new UpdateRequest(clientInfo.getId().toString(), new TypeDescriptor(kapuaIndexName, ClientInfoSchema.CLIENT_TYPE_NAME), clientInfo);
+                        UpdateRequest request = new UpdateRequest(clientInfo.getId().toString(), new TypeDescriptor(kapuaIndexName, InfoSchema.INFO_TYPE_NAME), clientInfo);
                         response = client.upsert(request);
 
                         if (!clientInfoId.equals(response.getId())) {
@@ -116,7 +116,7 @@ public class ClientInfoRegistryFacade {
                             throw new ClientException(ClientErrorCodes.ACTION_ERROR, String.format(ClientErrorMessages.CRUD_INTERNAL_ERROR, "ClientInfoRegistry - upstore"));
                         }
                         logger.debug(String.format("Upsert on asset succesfully executed [%s.%s, %s]", kapuaIndexName,
-                                ClientInfoSchema.CLIENT_TYPE_NAME, response.getId()));
+                                InfoSchema.CLIENT_TYPE_NAME, response.getId()));
                         // Update cache if asset update is completed successfully
                     }
                     DatastoreCacheManager.getInstance().getClientsCache().put(clientInfo.getClientId(), true);
@@ -152,7 +152,7 @@ public class ClientInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(scopeId);
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         client.delete(typeDescriptor, id.toString());
     }
 
@@ -178,7 +178,7 @@ public class ClientInfoRegistryFacade {
         ClientInfoQueryImpl idsQuery = new ClientInfoQueryImpl(scopeId);
         idsQuery.setLimit(1);
 
-        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(ClientInfoSchema.CLIENT_TYPE_NAME);
+        IdsPredicateImpl idsPredicate = new IdsPredicateImpl(InfoSchema.CLIENT_TYPE_NAME);
         idsPredicate.addValue(id);
         idsQuery.setPredicate(idsPredicate);
 
@@ -213,7 +213,7 @@ public class ClientInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         return new ClientInfoListResultImpl(client.query(typeDescriptor, query, ClientInfo.class));
     }
 
@@ -244,7 +244,7 @@ public class ClientInfoRegistryFacade {
         }
 
         String dataIndexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, InfoSchema.INFO_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
 
@@ -276,7 +276,7 @@ public class ClientInfoRegistryFacade {
         }
 
         String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
-        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
+        TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, InfoSchema.INFO_TYPE_NAME);
         client.deleteByQuery(typeDescriptor, query);
     }
 

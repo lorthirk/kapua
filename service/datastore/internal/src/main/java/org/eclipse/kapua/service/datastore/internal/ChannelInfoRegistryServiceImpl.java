@@ -34,7 +34,7 @@ import org.eclipse.kapua.service.datastore.internal.model.query.AndPredicateImpl
 import org.eclipse.kapua.service.datastore.internal.model.query.MessageQueryImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.RangePredicateImpl;
 import org.eclipse.kapua.service.datastore.internal.model.query.StorableFieldImpl;
-import org.eclipse.kapua.service.datastore.internal.schema.ChannelInfoSchema;
+import org.eclipse.kapua.service.datastore.internal.schema.InfoSchema;
 import org.eclipse.kapua.service.datastore.internal.schema.MessageSchema;
 import org.eclipse.kapua.service.datastore.model.ChannelInfo;
 import org.eclipse.kapua.service.datastore.model.ChannelInfoListResult;
@@ -199,7 +199,7 @@ public class ChannelInfoRegistryServiceImpl extends AbstractKapuaService impleme
         messageQuery.setOffset(0);
         messageQuery.setSortFields(sort);
 
-        RangePredicate messageIdPredicate = new RangePredicateImpl(new StorableFieldImpl(ChannelInfoSchema.CHANNEL_TIMESTAMP), channelInfo.getFirstMessageOn(), null);
+        RangePredicate messageIdPredicate = new RangePredicateImpl(new StorableFieldImpl(InfoSchema.TIMESTAMP), channelInfo.getFirstMessageOn(), null);
         TermPredicate clientIdPredicate = storablePredicateFactory.newTermPredicate(MessageField.CLIENT_ID, channelInfo.getClientId());
         TermPredicate channelPredicate = storablePredicateFactory.newTermPredicate(MessageField.CHANNEL, channelInfo.getName());
 
