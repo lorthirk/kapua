@@ -100,9 +100,9 @@ public class ChannelInfoRegistryFacade {
                     ChannelInfo storedField = find(channelInfo.getScopeId(), storableId);
                     if (storedField == null) {
                         Metadata metadata = mediator.getMetadata(channelInfo.getScopeId(), channelInfo.getFirstMessageOn().getTime());
-                        String registryIndexName = metadata.getRegistryIndexName();
+                        String registryIndexName = metadata.getChannelRegistryIndexName();
 
-                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), ChannelInfoSchema.CHANNEL_TYPE_NAME), channelInfo);
+                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getChannelRegistryIndexName(), ChannelInfoSchema.CHANNEL_TYPE_NAME), channelInfo);
                         response = getElasticsearchClient().upsert(request);
 
                         LOG.debug("Upsert on channel successfully executed [{}.{}, {} - {}]", registryIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME, channelInfoId, response.getId());
@@ -139,7 +139,7 @@ public class ChannelInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(scopeId);
+        String indexName = SchemaUtil.getChannelIndexName(scopeId);
         ChannelInfo channelInfo = find(scopeId, id);
         if (channelInfo != null) {
             mediator.onBeforeChannelInfoDelete(channelInfo);
@@ -194,7 +194,7 @@ public class ChannelInfoRegistryFacade {
             return new ChannelInfoListResultImpl();
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
         return new ChannelInfoListResultImpl(getElasticsearchClient().query(typeDescriptor, query, ChannelInfo.class));
     }
@@ -220,7 +220,7 @@ public class ChannelInfoRegistryFacade {
             return 0;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
         return getElasticsearchClient().count(typeDescriptor, query);
     }
@@ -248,7 +248,7 @@ public class ChannelInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         ChannelInfoListResult channels = query(query);
         // TODO Improve performances
         for (ChannelInfo channelInfo : channels.getItems()) {
