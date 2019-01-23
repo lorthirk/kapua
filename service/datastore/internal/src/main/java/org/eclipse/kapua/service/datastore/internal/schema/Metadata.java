@@ -26,7 +26,9 @@ public class Metadata {
 
     // Info fields does not change within the same account name
     private String dataIndexName;
-    private String registryIndexName;
+    private String channelRegistryIndexName;
+    private String clientRegistryIndexName;
+    private String metricRegistryIndexName;
     //
 
     // Custom mappings can only increase within the same account
@@ -47,10 +49,12 @@ public class Metadata {
     /**
      * Contruct metadata
      */
-    public Metadata(String dataIndexName, String registryIndexName) {
-        messageMappingsCache = new HashMap<String, Metric>(100);
+    public Metadata(String dataIndexName, String channelRegistryIndexName, String clientRegistryIndexName, String metricRegistryIndexName) {
+        messageMappingsCache = new HashMap<>(100);
         this.dataIndexName = dataIndexName;
-        this.registryIndexName = registryIndexName;
+        this.channelRegistryIndexName = channelRegistryIndexName;
+        this.clientRegistryIndexName = clientRegistryIndexName;
+        this.metricRegistryIndexName = metricRegistryIndexName;
     }
 
     /**
@@ -63,11 +67,19 @@ public class Metadata {
     }
 
     /**
-     * Get the Kapua data index name
+     * Get the Kapua channel index name
      * 
      * @return
      */
-    public String getRegistryIndexName() {
-        return registryIndexName;
+    public String getChannelRegistryIndexName() {
+        return channelRegistryIndexName;
+    }
+
+    public String getClientRegistryIndexName() {
+        return clientRegistryIndexName;
+    }
+
+    public String getMetricRegistryIndexName() {
+        return metricRegistryIndexName;
     }
 }

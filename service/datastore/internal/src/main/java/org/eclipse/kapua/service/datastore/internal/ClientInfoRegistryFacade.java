@@ -106,7 +106,7 @@ public class ClientInfoRegistryFacade {
                     ClientInfo storedField = find(clientInfo.getScopeId(), storableId);
                     if (storedField == null) {
                         Metadata metadata = mediator.getMetadata(clientInfo.getScopeId(), clientInfo.getFirstMessageOn().getTime());
-                        String kapuaIndexName = metadata.getRegistryIndexName();
+                        String kapuaIndexName = metadata.getClientRegistryIndexName();
 
                         UpdateRequest request = new UpdateRequest(clientInfo.getId().toString(), new TypeDescriptor(kapuaIndexName, ClientInfoSchema.CLIENT_TYPE_NAME), clientInfo);
                         response = client.upsert(request);
@@ -151,7 +151,7 @@ public class ClientInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(scopeId);
+        String indexName = SchemaUtil.getClientIndexName(scopeId);
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
         client.delete(typeDescriptor, id.toString());
     }
@@ -212,7 +212,7 @@ public class ClientInfoRegistryFacade {
             return new ClientInfoListResultImpl();
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getClientIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
         return new ClientInfoListResultImpl(client.query(typeDescriptor, query, ClientInfo.class));
     }
@@ -243,7 +243,7 @@ public class ClientInfoRegistryFacade {
             return 0;
         }
 
-        String dataIndexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String dataIndexName = SchemaUtil.getClientIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(dataIndexName, ClientInfoSchema.CLIENT_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
@@ -275,7 +275,7 @@ public class ClientInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getClientIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ClientInfoSchema.CLIENT_TYPE_NAME);
         client.deleteByQuery(typeDescriptor, query);
     }

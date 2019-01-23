@@ -48,12 +48,6 @@ public class Schema {
     private static final Logger LOG = LoggerFactory.getLogger(Schema.class);
 
     /**
-     * Construct the Elasticsearch schema
-     */
-    public Schema() {
-    }
-
-    /**
      * Synchronize metadata
      *
      * @param scopeId
@@ -84,26 +78,43 @@ public class Schema {
             IndexResponse dataIndexExistsResponse = datastoreClient.isIndexExists(new IndexRequest(dataIndexName));
             if (!dataIndexExistsResponse.isIndexExists()) {
                 datastoreClient.createIndex(dataIndexName, getMappingSchema(dataIndexName));
-                LOG.info("Data index created: " + dataIndexName);
+                LOG.info("Data index created: {}", dataIndexName);
             }
 
             boolean enableAllField = false;
             boolean enableSourceField = true;
 
             datastoreClient.putMapping(new TypeDescriptor(dataIndexName, MessageSchema.MESSAGE_TYPE_NAME), MessageSchema.getMesageTypeSchema(enableAllField, enableSourceField));
-            // Check existence of the kapua internal index
-            String registryIndexName = DatastoreUtils.getRegistryIndexName(scopeId);
-            IndexResponse registryIndexExistsResponse = datastoreClient.isIndexExists(new IndexRequest(registryIndexName));
-            if (!registryIndexExistsResponse.isIndexExists()) {
-                datastoreClient.createIndex(registryIndexName, getMappingSchema(registryIndexName));
-                LOG.info("Metadata index created: " + registryIndexExistsResponse);
 
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME), ChannelInfoSchema.getChannelTypeSchema(enableAllField, enableSourceField));
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, MetricInfoSchema.METRIC_TYPE_NAME), MetricInfoSchema.getMetricTypeSchema(enableAllField, enableSourceField));
-                datastoreClient.putMapping(new TypeDescriptor(registryIndexName, ClientInfoSchema.CLIENT_TYPE_NAME), ClientInfoSchema.getClientTypeSchema(enableAllField, enableSourceField));
+            // Check existence of the kapua internal indexes
+            String channelRegistryIndexName = DatastoreUtils.getChannelIndexName(scopeId);
+            IndexResponse channelRegistryIndexExistsResponse = datastoreClient.isIndexExists(new IndexRequest(channelRegistryIndexName));
+            if (!channelRegistryIndexExistsResponse.isIndexExists()) {
+                datastoreClient.createIndex(channelRegistryIndexName, getMappingSchema(channelRegistryIndexName));
+                LOG.info("Channel Metadata index created: {}", channelRegistryIndexExistsResponse);
+
+                datastoreClient.putMapping(new TypeDescriptor(channelRegistryIndexName, ChannelInfoSchema.CHANNEL_TYPE_NAME), ChannelInfoSchema.getChannelTypeSchema(enableAllField, enableSourceField));
             }
 
-            currentMetadata = new Metadata(dataIndexName, registryIndexName);
+            String clientRegistryIndexName = DatastoreUtils.getClientIndexName(scopeId);
+            IndexResponse clientRegistryIndexExistsResponse = datastoreClient.isIndexExists(new IndexRequest(clientRegistryIndexName));
+            if (!clientRegistryIndexExistsResponse.isIndexExists()) {
+                datastoreClient.createIndex(clientRegistryIndexName, getMappingSchema(clientRegistryIndexName));
+                LOG.info("Client Metadata index created: {}", clientRegistryIndexExistsResponse);
+
+                datastoreClient.putMapping(new TypeDescriptor(clientRegistryIndexName, ClientInfoSchema.CLIENT_TYPE_NAME), ClientInfoSchema.getClientTypeSchema(enableAllField, enableSourceField));
+            }
+
+            String metricRegistryIndexName = DatastoreUtils.getMetricIndexName(scopeId);
+            IndexResponse metricRegistryIndexExistsResponse = datastoreClient.isIndexExists(new IndexRequest(metricRegistryIndexName));
+            if (!metricRegistryIndexExistsResponse.isIndexExists()) {
+                datastoreClient.createIndex(metricRegistryIndexName, getMappingSchema(metricRegistryIndexName));
+                LOG.info("Metric Metadata index created: {}", metricRegistryIndexExistsResponse);
+
+                datastoreClient.putMapping(new TypeDescriptor(metricRegistryIndexName, MetricInfoSchema.METRIC_TYPE_NAME), MetricInfoSchema.getMetricTypeSchema(enableAllField, enableSourceField));
+            }
+
+            currentMetadata = new Metadata(dataIndexName, channelRegistryIndexName, clientRegistryIndexName, metricRegistryIndexName);
             LOG.debug("Leaving updating metadata");
         }
 
@@ -150,7 +161,7 @@ public class Schema {
             metricsMapping = getNewMessageMappingsBuilder(diffs);
         }
 
-        LOG.trace("Sending dynamic message mappings: " + metricsMapping);
+        LOG.trace("Sending dynamic message mappings: {}", metricsMapping);
         DatastoreClientFactory.getInstance().putMapping(new TypeDescriptor(currentMetadata.getDataIndexName(), MessageSchema.MESSAGE_TYPE_NAME), metricsMapping);
     }
 

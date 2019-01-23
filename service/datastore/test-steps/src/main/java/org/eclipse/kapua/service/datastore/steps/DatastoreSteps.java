@@ -2503,7 +2503,7 @@ public class DatastoreSteps extends TestBase {
         query.setLimit(limit);
         query.setOffset(0);
         List<SortField> order = new ArrayList<>();
-        order.add(SortField.descending(MetricInfoSchema.METRIC_MTR_TIMESTAMP));
+        order.add(SortField.descending(MetricInfoSchema.METRIC_MTR_TIMESTAMP_FULL));
         query.setSortFields(order);
 
         return query;

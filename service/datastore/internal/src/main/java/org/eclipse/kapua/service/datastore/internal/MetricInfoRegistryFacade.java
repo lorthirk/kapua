@@ -100,9 +100,9 @@ public class MetricInfoRegistryFacade {
             MetricInfo storedField = find(metricInfo.getScopeId(), storableId);
             if (storedField == null) {
                 Metadata metadata = mediator.getMetadata(metricInfo.getScopeId(), metricInfo.getFirstMessageOn().getTime());
-                String kapuaIndexName = metadata.getRegistryIndexName();
+                String kapuaIndexName = metadata.getMetricRegistryIndexName();
 
-                UpdateRequest request = new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo);
+                UpdateRequest request = new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getMetricRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo);
                 response = client.upsert(request);
 
                 if (!metricInfoId.equals(response.getId())) {
@@ -149,7 +149,7 @@ public class MetricInfoRegistryFacade {
                 performUpdate = true;
                 Metadata metadata = mediator.getMetadata(metricInfo.getScopeId(), metricInfo.getFirstMessageOn().getTime());
                 bulkRequest.add(
-                        new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo));
+                        new UpdateRequest(metricInfo.getId().toString(), new TypeDescriptor(metadata.getMetricRegistryIndexName(), MetricInfoSchema.METRIC_TYPE_NAME), metricInfo));
             }
         }
 
@@ -213,7 +213,7 @@ public class MetricInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(scopeId);
+        String indexName = SchemaUtil.getMetricIndexName(scopeId);
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
         client.delete(typeDescriptor, id.toString());
     }
@@ -274,7 +274,7 @@ public class MetricInfoRegistryFacade {
             return new MetricInfoListResultImpl();
         }
 
-        String indexNme = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexNme = SchemaUtil.getMetricIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexNme, MetricInfoSchema.METRIC_TYPE_NAME);
         ResultList<MetricInfo> result = client.query(typeDescriptor, query, MetricInfo.class);
         return new MetricInfoListResultImpl(result);
@@ -306,7 +306,7 @@ public class MetricInfoRegistryFacade {
             return 0;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getMetricIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
@@ -337,7 +337,7 @@ public class MetricInfoRegistryFacade {
             logger.debug("Storage not enabled for account {}, returning empty result", query.getScopeId());
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getMetricIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, MetricInfoSchema.METRIC_TYPE_NAME);
         client.deleteByQuery(typeDescriptor, query);
     }

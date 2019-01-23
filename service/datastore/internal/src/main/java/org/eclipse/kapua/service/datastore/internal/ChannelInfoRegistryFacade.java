@@ -105,9 +105,9 @@ public class ChannelInfoRegistryFacade {
                     ChannelInfo storedField = find(channelInfo.getScopeId(), storableId);
                     if (storedField == null) {
                         Metadata metadata = mediator.getMetadata(channelInfo.getScopeId(), channelInfo.getFirstMessageOn().getTime());
-                        String registryIndexName = metadata.getRegistryIndexName();
+                        String registryIndexName = metadata.getChannelRegistryIndexName();
 
-                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getRegistryIndexName(), ChannelInfoSchema.CHANNEL_TYPE_NAME),
+                        UpdateRequest request = new UpdateRequest(channelInfo.getId().toString(), new TypeDescriptor(metadata.getChannelRegistryIndexName(), ChannelInfoSchema.CHANNEL_TYPE_NAME),
                                 channelInfo);
                         response = client.upsert(request);
 
@@ -153,7 +153,7 @@ public class ChannelInfoRegistryFacade {
             logger.debug("Storage not enabled for account {}, return", scopeId);
             return;
         }
-        String indexName = SchemaUtil.getKapuaIndexName(scopeId);
+        String indexName = SchemaUtil.getChannelIndexName(scopeId);
         ChannelInfo channelInfo = find(scopeId, id);
         if (channelInfo != null) {
             mediator.onBeforeChannelInfoDelete(channelInfo);
@@ -218,7 +218,7 @@ public class ChannelInfoRegistryFacade {
             return new ChannelInfoListResultImpl();
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
         return new ChannelInfoListResultImpl(client.query(typeDescriptor, query, ChannelInfo.class));
     }
@@ -249,7 +249,7 @@ public class ChannelInfoRegistryFacade {
             return 0;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         TypeDescriptor typeDescriptor = new TypeDescriptor(indexName, ChannelInfoSchema.CHANNEL_TYPE_NAME);
         return client.count(typeDescriptor, query);
     }
@@ -281,7 +281,7 @@ public class ChannelInfoRegistryFacade {
             return;
         }
 
-        String indexName = SchemaUtil.getKapuaIndexName(query.getScopeId());
+        String indexName = SchemaUtil.getChannelIndexName(query.getScopeId());
         ChannelInfoListResult channels = query(query);
         // TODO Improve performances
         for (ChannelInfo channelInfo : channels.getItems()) {
