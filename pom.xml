@@ -82,6 +82,7 @@
         <logback.version>1.2.3</logback.version>
         <snakeyaml.version>1.15</snakeyaml.version>
         <swagger.version>1.5.12</swagger.version>
+        <validation-api.version>2.0.1.Final</validation-api.version>
         <cucumber.version>1.2.4</cucumber.version>
         <spotify.version>8.15.1</spotify.version>
         <elasticsearch.version>5.3.0</elasticsearch.version>
@@ -1656,6 +1657,7 @@
         <module>dev-tools</module>
         <module>deployment</module>
 
+        <module>microservice</module>
     </modules>
 
     <profiles>
