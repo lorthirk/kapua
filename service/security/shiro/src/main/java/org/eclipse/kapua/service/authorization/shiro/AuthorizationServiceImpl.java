@@ -11,7 +11,6 @@
  *******************************************************************************/
 package org.eclipse.kapua.service.authorization.shiro;
 
-import org.apache.shiro.SecurityUtils;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.KapuaUnauthenticatedException;
 import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
@@ -20,6 +19,8 @@ import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.Permission;
 import org.eclipse.kapua.service.authorization.shiro.exception.SubjectUnauthorizedException;
+
+import org.apache.shiro.SecurityUtils;
 
 /**
  * {@link AuthorizationService} implementation.
