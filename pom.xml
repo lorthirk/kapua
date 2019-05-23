@@ -101,6 +101,7 @@
         <netty-all.version>4.1.34.Final</netty-all.version>
         <quartz-scheduler.version>2.2.3</quartz-scheduler.version>
         <jetty.version>9.4.12.v20180830</jetty.version>
+        <vertx.version>3.7.0</vertx.version>
 
         <!-- Plugins versions -->
         <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
@@ -857,6 +858,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.kapua</groupId>
+                <artifactId>kapua-service-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.kapua</groupId>
                 <artifactId>kapua-account-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1607,6 +1613,26 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>apache-jstl</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-amqp-bridge</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-web</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-health-check</artifactId>
+                <version>${vertx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.vertx</groupId>
+                <artifactId>vertx-dropwizard-metrics</artifactId>
+                <version>${vertx.version}</version>
             </dependency>
 
             <!-- Spring -->
