@@ -15,9 +15,15 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . ${SCRIPT_DIR}/docker-common.sh
 
+if [[ -z ${KAPUA_JWT_CERTIFICATE} ]] || [[ -z ${KAPUA_JWT_PRIVATE_KEY} ]]
+then
+    echo "Either KAPUA_JWT_CERTIFICATE or KAPUA_JWT_PRIVATE_KEY are not set. For more information please refer to the Kapua Documentation."
+    exit 1;
+fi
+
 echo "Deploying Eclipse Kapua..."
 
 docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml up -d
 
 echo "Deploying Eclipse Kapua... DONE!"
-echo "Run \"docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml logs -f\" for container logs"
+echo "Run \"docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml logs\" for container logs"
