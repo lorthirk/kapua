@@ -49,6 +49,7 @@ services:
       - db
       - es
       - events-broker
+      - job-engine
     environment:
       - KAPUA_DISABLE_SSL
       - KAPUA_CA
@@ -75,3 +76,11 @@ services:
       - KAPUA_KEY_PASSWORD
       - KAPUA_KEYSTORE
       - KAPUA_KEYSTORE_PASSWORD
+  job-engine:
+    depends_on:
+      - db
+      - broker
+      - events-broker
+    image: kapua/kapua-job-engine:${IMAGE_VERSION}
+    ports:
+      - 8082:8080

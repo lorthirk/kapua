@@ -26,4 +26,4 @@ echo "Deploying Eclipse Kapua..."
 docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml up -d
 
 echo "Deploying Eclipse Kapua... DONE!"
-echo "Run \"docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml logs\" for container logs"
+echo "Run \"docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml logs -f\" for container logs"
