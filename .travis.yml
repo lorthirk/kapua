@@ -26,50 +26,50 @@ jobs:
     script:
     - ./travis.sh mvn -f external/pom.xml install
     - ./travis.sh mvn ${BUILD_OPTS} -DskipTests clean install
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @default"  verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @brokerAcl" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @tag" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @broker" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @device" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @connection" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @datastore" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @user" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @security" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @jobs" verify
+  #   - bash <(curl -s https://codecov.io/bash)
+  # - stage: test
+  #   script:
+  #   - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='org.eclipse.kapua.qa.markers.junit.JUnitTests' verify
+  #   - bash <(curl -s https://codecov.io/bash)
   - stage: test
     script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @default"  verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @brokerAcl" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @tag" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @broker" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @device" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @connection" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @datastore" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @user" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @security" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='!org.eclipse.kapua.qa.markers.junit.JUnitTests' -Dcucumber.options="--tags @jobs" verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - ./travis.sh mvn ${BUILD_OPTS} ${CONFIG_OVERRIDES} -Dgroups='org.eclipse.kapua.qa.markers.junit.JUnitTests' verify
-    - bash <(curl -s https://codecov.io/bash)
-  - stage: test
-    script:
-    - mvn -DskipTests -Pjavadoc install javadoc:jar
+    - mvn -DskipTests -f service/api/pom.xml -Ddebug=true -Pjavadoc install javadoc:jar
