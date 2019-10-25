@@ -75,7 +75,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${project.build.directory}/generated-sources/gwt</source>
+                                ${project.basedir}/target/generated-sources/gwt
                             </sources>
                         </configuration>
                     </execution>

@@ -246,7 +246,7 @@
                         </goals>
                         <configuration>
                             <sources>
-                                <source>${project.build.directory}/generated-sources/gwt</source>
+                                <source>${project.basedir}/target/generated-sources/gwt</source>
                             </sources>
                         </configuration>
                     </execution>
