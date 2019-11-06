@@ -17,6 +17,6 @@ $common_path = $script_dir + '\docker-common.ps1'
 
 Write-Host "Undeploying Eclipse Kapua..."
 
-docker-compose -f $script_dir'\..\compose\docker-compose.yml' down
+docker-compose -p kapua -f $script_dir'\..\compose\docker-compose.yml' down
 
 Write-Host "Undeploying Eclipse Kapua... DONE!"

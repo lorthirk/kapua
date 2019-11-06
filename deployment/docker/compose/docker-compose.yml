@@ -1,4 +1,4 @@
-version: '3.1'
+version: '3.7'
 
 services:
   db:
@@ -39,7 +39,7 @@ services:
       - KAPUA_KEY_PASSWORD
       - KAPUA_KEYSTORE
       - KAPUA_KEYSTORE_PASSWORD
-  kapua-console:
+  console:
     image: kapua/kapua-console:${IMAGE_VERSION}
     ports:
       - 8080:8080
@@ -57,7 +57,7 @@ services:
       - KAPUA_KEY_PASSWORD
       - KAPUA_KEYSTORE
       - KAPUA_KEYSTORE_PASSWORD
-  kapua-api:
+  api:
     image: kapua/kapua-api:${IMAGE_VERSION}
     ports:
       - 8081:8080

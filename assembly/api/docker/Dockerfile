@@ -44,3 +44,5 @@ RUN chown -R 1000:0 /opt/jetty /var/opt/jetty && \
     chmod -R g=u /opt/jetty /var/opt/jetty
 
 USER 1000
+
+ENTRYPOINT ["/entrypoint-api.sh"]

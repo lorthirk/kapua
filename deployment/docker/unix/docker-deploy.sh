@@ -17,7 +17,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "Deploying Eclipse Kapua..."
 
-docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml up -d
+docker-compose -p kapua -f ${SCRIPT_DIR}/../compose/docker-compose.yml up -d
 
 echo "Deploying Eclipse Kapua... DONE!"
 echo "Run \"docker-compose -f ${SCRIPT_DIR}/../compose/docker-compose.yml logs -f\" for container logs"

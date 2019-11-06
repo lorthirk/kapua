@@ -38,6 +38,13 @@
 
         </dependencySet>
     </dependencySets>
+    <files>
+        <file>
+            <source>${project.basedir}/entrypoint/entrypoint-api.sh</source>
+            <outputDirectory>./</outputDirectory>
+            <fileMode>0775</fileMode>
+        </file>
+    </files>
     <fileSets>
         <fileSet>
             <outputDirectory>var/opt/jetty/webapps/root/doc</outputDirectory>

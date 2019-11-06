@@ -17,7 +17,7 @@ $common_path = $script_dir + '\docker-common.ps1'
 
 Write-Host "Deploying Eclipse Kapua..."
 
-docker-compose -f $script_dir'\..\compose\docker-compose.yml' up -d
+docker-compose -p kapua -f $script_dir'\..\compose\docker-compose.yml' up -d
 
 Write-Host "Deploying Eclipse Kapua... DONE!"
 Write-Host "Run `"docker-compose -f `"$script_dir\..\compose\docker-compose.yml`" logs -f`" for container logs"
