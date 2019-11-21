@@ -75,10 +75,17 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
     private static final TriggerDefinitionService TRIGGER_DEFINITION_SERVICE = LOCATOR.getService(TriggerDefinitionService.class);
     private static final TriggerDefinitionFactory TRIGGER_DEFINITION_FACTORY = LOCATOR.getFactory(TriggerDefinitionFactory.class);
 
-    private static final TriggerDefinition INTERVAL_JOB__TRIGGER;
-    private static final TriggerDefinition CRON_JOB__TRIGGER;
+    private final TriggerDefinition intervalJobTrigger;
+    private final TriggerDefinition triggerDefinition;
 
-    static {
+    /**
+     * Constructor.
+     *
+     * @since 1.0.0
+     */
+    public TriggerServiceImpl() {
+        super(TriggerService.class.getName(), SchedulerDomains.SCHEDULER_DOMAIN, SchedulerEntityManagerFactory.getInstance(), TriggerService.class, TriggerFactory.class);
+
         TriggerDefinition intervalJobTrigger = null;
         try {
             TriggerDefinitionQuery query = TRIGGER_DEFINITION_FACTORY.newQuery(null);
@@ -113,18 +120,8 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
             LOG.error("Error while initializing class", e);
         }
 
-        INTERVAL_JOB__TRIGGER = intervalJobTrigger;
-        CRON_JOB__TRIGGER = cronJobTrigger;
-    }
-
-
-    /**
-     * Constructor.
-     *
-     * @since 1.0.0
-     */
-    public TriggerServiceImpl() {
-        super(TriggerService.class.getName(), SchedulerDomains.SCHEDULER_DOMAIN, SchedulerEntityManagerFactory.getInstance(), TriggerService.class, TriggerFactory.class);
+        this.intervalJobTrigger = intervalJobTrigger;
+        triggerDefinition = cronJobTrigger;
     }
 
     @Override
@@ -190,9 +187,9 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
                 Trigger trigger = TriggerDAO.create(em, triggerCreator);
 
                 // Quartz Job definition and creation
-                if (INTERVAL_JOB__TRIGGER.getId().equals(triggerCreator.getTriggerDefinitionId())) {
+                if (intervalJobTrigger.getId().equals(triggerCreator.getTriggerDefinitionId())) {
                     QuartzTriggerDriver.createIntervalJobTrigger(trigger);
-                } else if (CRON_JOB__TRIGGER.getId().equals(triggerCreator.getTriggerDefinitionId())) {
+                } else if (this.triggerDefinition.getId().equals(triggerCreator.getTriggerDefinitionId())) {
                     QuartzTriggerDriver.createCronJobTrigger(trigger);
                 }
 
@@ -332,10 +329,10 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
     private void adaptTriggerCreator(TriggerCreator triggerCreator) {
         if (triggerCreator.getRetryInterval() != null) {
-            triggerCreator.setTriggerDefinitionId(INTERVAL_JOB__TRIGGER.getId());
+            triggerCreator.setTriggerDefinitionId(intervalJobTrigger.getId());
             triggerCreator.getTriggerProperties().add(TRIGGER_DEFINITION_FACTORY.newTriggerProperty("interval", Integer.class.getName(), triggerCreator.getRetryInterval().toString()));
         } else if (triggerCreator.getCronScheduling() != null) {
-            triggerCreator.setTriggerDefinitionId(CRON_JOB__TRIGGER.getId());
+            triggerCreator.setTriggerDefinitionId(triggerDefinition.getId());
             triggerCreator.getTriggerProperties().add(TRIGGER_DEFINITION_FACTORY.newTriggerProperty("cronExpression", String.class.getName(), triggerCreator.getCronScheduling()));
         }
     }
@@ -343,7 +340,7 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
     private void adaptTrigger(Trigger trigger) {
         boolean converted = false;
         if (trigger.getRetryInterval() != null) {
-            trigger.setTriggerDefinitionId(INTERVAL_JOB__TRIGGER.getId());
+            trigger.setTriggerDefinitionId(intervalJobTrigger.getId());
 
             List<TriggerProperty> triggerProperties = new ArrayList<>(trigger.getTriggerProperties());
             triggerProperties.add(TRIGGER_DEFINITION_FACTORY.newTriggerProperty("interval", Integer.class.getName(), trigger.getRetryInterval().toString()));
@@ -354,7 +351,7 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
             converted = true;
 
         } else if (trigger.getCronScheduling() != null) {
-            trigger.setTriggerDefinitionId(CRON_JOB__TRIGGER.getId());
+            trigger.setTriggerDefinitionId(triggerDefinition.getId());
 
             List<TriggerProperty> triggerProperties = new ArrayList<>(trigger.getTriggerProperties());
             triggerProperties.add(TRIGGER_DEFINITION_FACTORY.newTriggerProperty("cronExpression", String.class.getName(), trigger.getCronScheduling()));
