@@ -15,11 +15,11 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . ${SCRIPT_DIR}/docker-common.sh
 
-if [[ -z ${KAPUA_JWT_CERTIFICATE} ]] || [[ -z ${KAPUA_JWT_PRIVATE_KEY} ]]
-then
-    echo "Either KAPUA_JWT_CERTIFICATE or KAPUA_JWT_PRIVATE_KEY are not set. For more information please refer to the Kapua Documentation."
-    exit 1;
-fi
+#if [[ -z ${KAPUA_JWT_CERTIFICATE} ]] || [[ -z ${KAPUA_JWT_PRIVATE_KEY} ]]
+#then
+#    echo "Either KAPUA_JWT_CERTIFICATE or KAPUA_JWT_PRIVATE_KEY are not set. For more information please refer to the Kapua Documentation."
+#    exit 1;
+#fi
 
 echo "Deploying Eclipse Kapua..."
 
