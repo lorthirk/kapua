@@ -15,6 +15,7 @@ package org.eclipse.kapua.commons.util.xml;
 import org.apache.commons.lang.SystemUtils;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
+import org.eclipse.persistence.jaxb.JAXBContextProperties;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
