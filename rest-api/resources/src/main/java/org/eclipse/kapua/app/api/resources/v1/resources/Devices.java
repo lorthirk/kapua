@@ -23,6 +23,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.eclipse.kapua.KapuaEntityNotFoundException;
@@ -31,8 +35,10 @@ import org.eclipse.kapua.app.api.resources.v1.resources.model.CountResult;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.EntityId;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.ScopeId;
 import org.eclipse.kapua.locator.KapuaLocator;
+import org.eclipse.kapua.model.KapuaUpdatableEntityAttributes;
 import org.eclipse.kapua.model.query.SortOrder;
 import org.eclipse.kapua.model.query.predicate.AndPredicate;
+import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
 import org.eclipse.kapua.service.KapuaService;
 import org.eclipse.kapua.service.device.registry.Device;
 import org.eclipse.kapua.service.device.registry.DeviceAttributes;
@@ -52,6 +58,7 @@ public class Devices extends AbstractKapuaResource {
     private final KapuaLocator locator = KapuaLocator.getInstance();
     private final DeviceRegistryService deviceService = locator.getService(DeviceRegistryService.class);
     private final DeviceFactory deviceFactory = locator.getFactory(DeviceFactory.class);
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     /**
      * Gets the {@link Device} list in the scope.
@@ -60,6 +67,7 @@ public class Devices extends AbstractKapuaResource {
      * @param tagId            The id of the {@link Tag} in which to search results
      * @param clientId         The id of the {@link Device} in which to search results
      * @param connectionStatus The {@link DeviceConnectionStatus} in which to search results
+     * @param modifiedAfter
      * @param fetchAttributes  Additional attributes to be returned. Allowed values: connection, lastEvent
      * @param askTotalCount    Ask for the total count of the matched entities in the result
      * @param sortParam        The name of the parameter that will be used as a sorting key
@@ -77,12 +85,13 @@ public class Devices extends AbstractKapuaResource {
             @QueryParam("tagId") EntityId tagId,
             @QueryParam("clientId") String clientId,
             @QueryParam("status") DeviceConnectionStatus connectionStatus,
+            @QueryParam("modifiedAfter") String modifiedAfter,
             @QueryParam("fetchAttributes") List<String> fetchAttributes,
             @QueryParam("askTotalCount") boolean askTotalCount,
             @QueryParam("sortParam") String sortParam,
             @QueryParam("sortDir") @DefaultValue("ASCENDING") SortOrder sortDir,
             @QueryParam("offset") @DefaultValue("0") int offset,
-            @QueryParam("limit") @DefaultValue("50") int limit) throws KapuaException {
+            @QueryParam("limit") @DefaultValue("50") int limit) throws KapuaException, ParseException {
         DeviceQuery query = deviceFactory.newQuery(scopeId);
 
         AndPredicate andPredicate = query.andPredicate();
@@ -95,7 +104,10 @@ public class Devices extends AbstractKapuaResource {
         if (connectionStatus != null) {
             andPredicate.and(query.attributePredicate(DeviceAttributes.CONNECTION_STATUS, connectionStatus));
         }
-
+        if (modifiedAfter != null) {
+            Date modifiedAfterDate = dateFormat.parse(modifiedAfter);
+            andPredicate.and(query.attributePredicate(KapuaUpdatableEntityAttributes.MODIFIED_ON, modifiedAfterDate, Operator.GREATER_THAN_OR_EQUAL));
+        }
         if (!Strings.isNullOrEmpty(sortParam)) {
             query.setSortCriteria(query.fieldSortCriteria(sortParam, sortDir));
         }

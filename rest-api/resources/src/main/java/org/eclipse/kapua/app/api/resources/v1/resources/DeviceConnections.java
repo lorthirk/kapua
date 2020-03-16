@@ -12,13 +12,16 @@
 package org.eclipse.kapua.app.api.resources.v1.resources;
 
 import com.google.common.base.Strings;
+
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.CountResult;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.EntityId;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.ScopeId;
 import org.eclipse.kapua.locator.KapuaLocator;
+import org.eclipse.kapua.model.KapuaUpdatableEntityAttributes;
 import org.eclipse.kapua.model.query.predicate.AndPredicate;
+import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
 import org.eclipse.kapua.service.KapuaService;
 import org.eclipse.kapua.service.device.registry.Device;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnection;
@@ -39,6 +42,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @Path("{scopeId}/deviceconnections")
 public class DeviceConnections extends AbstractKapuaResource {
@@ -46,15 +52,17 @@ public class DeviceConnections extends AbstractKapuaResource {
     private final KapuaLocator locator = KapuaLocator.getInstance();
     private final DeviceConnectionFactory deviceConnectionFactory = locator.getFactory(DeviceConnectionFactory.class);
     private final DeviceConnectionService deviceConnectionService = locator.getService(DeviceConnectionService.class);
+    private final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     /**
      * Gets the {@link DeviceConnection} list in the scope.
      *
-     * @param scopeId  The {@link ScopeId} in which to search results.
-     * @param clientId The id of the {@link Device} in which to search results
-     * @param status   The {@link DeviceConnectionStatus} in which to search results
-     * @param offset   The result set offset.
-     * @param limit    The result set limit.
+     * @param scopeId       The {@link ScopeId} in which to search results.
+     * @param clientId      The id of the {@link Device} in which to search results
+     * @param status        The {@link DeviceConnectionStatus} in which to search results
+     * @param modifiedAfter Only return results modified or created after this date
+     * @param offset        The result set offset.
+     * @param limit         The result set limit.
      * @return The {@link DeviceConnectionListResult} of all the deviceConnections associated to the current selected scope.
      * @throws Exception Whenever something bad happens. See specific {@link KapuaService} exceptions.
      * @since 1.0.0
@@ -65,7 +73,8 @@ public class DeviceConnections extends AbstractKapuaResource {
             @PathParam("scopeId") ScopeId scopeId,
             @QueryParam("clientId") String clientId,
             @QueryParam("status") DeviceConnectionStatus status,
-            @QueryParam("offset") @DefaultValue("0") int offset,
+            @QueryParam("modifiedAfter") String modifiedAfter,
+            @QueryParam("offset")@DefaultValue("0") int offset,
             @QueryParam("limit") @DefaultValue("50") int limit) throws Exception {
         DeviceConnectionQuery query = deviceConnectionFactory.newQuery(scopeId);
 
@@ -76,6 +85,11 @@ public class DeviceConnections extends AbstractKapuaResource {
         if (status != null) {
             andPredicate.and(query.attributePredicate(DeviceConnectionAttributes.STATUS, status));
         }
+        if (modifiedAfter != null) {
+            Date modifiedAfterDate = dateFormat.parse(modifiedAfter);
+            andPredicate.and(query.attributePredicate(KapuaUpdatableEntityAttributes.MODIFIED_ON, modifiedAfterDate, Operator.GREATER_THAN_OR_EQUAL));
+        }
+
         query.setPredicate(andPredicate);
 
         query.setOffset(offset);
