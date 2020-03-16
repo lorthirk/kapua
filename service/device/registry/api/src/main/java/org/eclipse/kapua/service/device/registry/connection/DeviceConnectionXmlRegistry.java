@@ -47,4 +47,8 @@ public class DeviceConnectionXmlRegistry {
     public DeviceConnectionQuery newQuery() {
         return DEVICE_CONNECTION_FACTORY.newQuery(null);
     }
+
+    public DeviceConnectionCreator newCreator() {
+        return DEVICE_CONNECTION_FACTORY.newCreator(null);
+    }
 }

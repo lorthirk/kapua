@@ -13,6 +13,7 @@ package org.eclipse.kapua.app.api.resources.v1.resources;
 
 import com.google.common.base.Strings;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
+import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.CountResult;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.EntityId;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.ScopeId;
@@ -22,6 +23,7 @@ import org.eclipse.kapua.service.KapuaService;
 import org.eclipse.kapua.service.device.registry.Device;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnection;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnectionAttributes;
+import org.eclipse.kapua.service.device.registry.connection.DeviceConnectionCreator;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnectionFactory;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnectionListResult;
 import org.eclipse.kapua.service.device.registry.connection.DeviceConnectionQuery;
@@ -146,6 +148,16 @@ public class DeviceConnections extends AbstractKapuaResource {
         } else {
             throw new KapuaEntityNotFoundException(DeviceConnection.TYPE, deviceConnectionId);
         }
+    }
+
+    /* ONLY FOR TEST PURPOSE - DO NOT MERGE !!! */
+    @POST
+    @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+    public DeviceConnection create(@PathParam("scopeId") ScopeId scopeId, DeviceConnectionCreator creator) throws KapuaException {
+        creator.setScopeId(scopeId);
+
+        return deviceConnectionService.create(creator);
     }
 
 }

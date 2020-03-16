@@ -13,15 +13,24 @@ package org.eclipse.kapua.service.device.registry.connection;
 
 import org.eclipse.kapua.model.KapuaUpdatableEntityCreator;
 import org.eclipse.kapua.model.id.KapuaId;
+import org.eclipse.kapua.model.id.KapuaIdAdapter;
 import org.eclipse.kapua.service.device.registry.ConnectionUserCouplingMode;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 /**
  * Device connection creator service definition.
  *
  * @since 1.0
  */
+@XmlRootElement(name = "deviceCreator")
+@XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlType(factoryClass = DeviceConnectionXmlRegistry.class, factoryMethod = "newCreator")
 public interface DeviceConnectionCreator extends KapuaUpdatableEntityCreator<DeviceConnection> {
 
     /**
@@ -58,6 +67,7 @@ public interface DeviceConnectionCreator extends KapuaUpdatableEntityCreator<Dev
      *
      * @return
      */
+    @XmlJavaTypeAdapter(KapuaIdAdapter.class)
     KapuaId getUserId();
 
     /**
@@ -86,6 +96,7 @@ public interface DeviceConnectionCreator extends KapuaUpdatableEntityCreator<Dev
      *
      * @return
      */
+    @XmlJavaTypeAdapter(KapuaIdAdapter.class)
     KapuaId getReservedUserId();
 
     /**
