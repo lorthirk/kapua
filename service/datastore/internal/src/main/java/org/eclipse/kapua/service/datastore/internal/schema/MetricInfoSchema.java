@@ -21,7 +21,7 @@ import org.eclipse.kapua.service.datastore.client.SchemaKeys;
 
 /**
  * Metric info schema definition
- * 
+ *
  * @since 1.0
  */
 public class MetricInfoSchema {
@@ -93,23 +93,18 @@ public class MetricInfoSchema {
 
     /**
      * Create and return the Json representation of the metric info schema
-     * 
-     * @param allEnable
+     *
      * @param sourceEnable
      * @return
      * @throws DatamodelMappingException
      */
-    public static JsonNode getMetricTypeSchema(boolean allEnable, boolean sourceEnable) throws DatamodelMappingException {
+    public static JsonNode getMetricTypeSchema(boolean sourceEnable) throws DatamodelMappingException {
         ObjectNode rootNode = SchemaUtil.getObjectNode();
 
         ObjectNode metricName = SchemaUtil.getObjectNode();
         ObjectNode sourceMetric = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, sourceEnable) });
         metricName.set(SchemaKeys.KEY_SOURCE, sourceMetric);
-
-        ObjectNode allMetric = SchemaUtil.getField(
-                new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, allEnable) });
-        metricName.set(SchemaKeys.KEY_ALL, allMetric);
 
         ObjectNode propertiesNode = SchemaUtil.getObjectNode();
         ObjectNode metricAccount = SchemaUtil.getField(
@@ -124,7 +119,7 @@ public class MetricInfoSchema {
 
         ObjectNode metricMtrNode = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_TYPE, SchemaKeys.TYPE_OBJECT), new KeyValueEntry(SchemaKeys.KEY_ENABLED, true),
-                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, false), new KeyValueEntry(SchemaKeys.KEY_INCLUDE_IN_ALL, false) });
+                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, false) });
         ObjectNode metricMtrPropertiesNode = SchemaUtil.getObjectNode();
         ObjectNode metricMtrNameNode = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_TYPE, SchemaKeys.TYPE_KEYWORD), new KeyValueEntry(SchemaKeys.KEY_INDEX, SchemaKeys.VALUE_TRUE) });

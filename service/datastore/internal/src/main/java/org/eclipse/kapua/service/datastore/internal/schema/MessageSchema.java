@@ -22,7 +22,7 @@ import org.eclipse.kapua.service.datastore.client.SchemaKeys;
 
 /**
  * Message schema definition
- * 
+ *
  * @since 1.0
  */
 public class MessageSchema {
@@ -168,21 +168,16 @@ public class MessageSchema {
 
     /**
      * Create and return the Json representation of the message schema
-     * 
-     * @param allEnable
+     *
      * @param sourceEnable
      * @return
      * @throws DatamodelMappingException
      */
-    public static JsonNode getMesageTypeSchema(boolean allEnable, boolean sourceEnable) throws DatamodelMappingException {
+    public static JsonNode getMesageTypeSchema(boolean sourceEnable) throws DatamodelMappingException {
         ObjectNode messageNode = SchemaUtil.getObjectNode();
         ObjectNode sourceMessage = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, sourceEnable) });
         messageNode.set(SchemaKeys.KEY_SOURCE, sourceMessage);
-
-        ObjectNode allMessage = SchemaUtil.getField(
-                new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, allEnable) });
-        messageNode.set(SchemaKeys.KEY_ALL, allMessage);
 
         ObjectNode propertiesNode = SchemaUtil.getObjectNode();
         ObjectNode messageId = SchemaUtil.getField(
@@ -218,7 +213,7 @@ public class MessageSchema {
 
         ObjectNode positionNode = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_TYPE, SchemaKeys.TYPE_OBJECT), new KeyValueEntry(SchemaKeys.KEY_ENABLED, true),
-                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, false), new KeyValueEntry(SchemaKeys.KEY_INCLUDE_IN_ALL, false) });
+                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, false) });
 
         ObjectNode positionPropertiesNode = SchemaUtil.getObjectNode();
         ObjectNode messagePositionPropLocation = SchemaUtil.getField(
@@ -251,7 +246,7 @@ public class MessageSchema {
 
         ObjectNode messageMetrics = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_TYPE, SchemaKeys.TYPE_OBJECT), new KeyValueEntry(SchemaKeys.KEY_ENABLED, true),
-                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, true), new KeyValueEntry(SchemaKeys.KEY_INCLUDE_IN_ALL, false) });
+                        new KeyValueEntry(SchemaKeys.KEY_DYNAMIC, true) });
         propertiesNode.set(MESSAGE_METRICS, messageMetrics);
 
         ObjectNode messageBody = SchemaUtil.getField(

@@ -52,20 +52,16 @@ public class ClientInfoSchema {
     /**
      * Create and return the Json representation of the client info schema
      *
-     * @param allEnable
      * @param sourceEnable
      * @return
      * @throws DatamodelMappingException
      */
-    public static JsonNode getClientTypeSchema(boolean allEnable, boolean sourceEnable) throws DatamodelMappingException {
+    public static JsonNode getClientTypeSchema(boolean sourceEnable) throws DatamodelMappingException {
         ObjectNode rootNode = SchemaUtil.getObjectNode();
 
         ObjectNode clientNodeName = SchemaUtil.getObjectNode();
         ObjectNode sourceClient = SchemaUtil.getField(new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, sourceEnable) });
         clientNodeName.set(SchemaKeys.KEY_SOURCE, sourceClient);
-
-        ObjectNode allClient = SchemaUtil.getField(new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, allEnable) });
-        clientNodeName.set(SchemaKeys.KEY_ALL, allClient);
 
         ObjectNode propertiesNode = SchemaUtil.getObjectNode();
         ObjectNode clientId = SchemaUtil

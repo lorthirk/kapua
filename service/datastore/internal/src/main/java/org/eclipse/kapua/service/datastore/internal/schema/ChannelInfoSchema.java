@@ -61,17 +61,13 @@ public class ChannelInfoSchema {
      * @return
      * @throws DatamodelMappingException
      */
-    public static JsonNode getChannelTypeSchema(boolean allEnable, boolean sourceEnable) throws DatamodelMappingException {
+    public static JsonNode getChannelTypeSchema(boolean sourceEnable) throws DatamodelMappingException {
         ObjectNode rootNode = SchemaUtil.getObjectNode();
 
         ObjectNode channelNode = SchemaUtil.getObjectNode();
         ObjectNode sourceChannel = SchemaUtil.getField(
                 new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, sourceEnable) });
         channelNode.set(SchemaKeys.KEY_SOURCE, sourceChannel);
-
-        ObjectNode allChannel = SchemaUtil.getField(
-                new KeyValueEntry[] { new KeyValueEntry(SchemaKeys.KEY_ENABLED, allEnable) });
-        channelNode.set(SchemaKeys.KEY_ALL, allChannel);
 
         ObjectNode propertiesNode = SchemaUtil.getObjectNode();
         ObjectNode channelScopeId = SchemaUtil.getField(

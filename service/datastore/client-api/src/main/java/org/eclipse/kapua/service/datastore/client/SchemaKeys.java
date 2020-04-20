@@ -55,10 +55,6 @@ public class SchemaKeys {
      */
     public static final String SORT_DESCENDING_VALUE = "desc";
     /**
-     * All key
-     */
-    public static final String KEY_ALL = "_all";
-    /**
      * Format key
      */
     public static final String KEY_FORMAT = "format";
@@ -82,10 +78,6 @@ public class SchemaKeys {
      * Dynamic key
      */
     public static final String KEY_DYNAMIC = "dynamic";
-    /**
-     * Include in all key
-     */
-    public static final String KEY_INCLUDE_IN_ALL = "include_in_all";
     /**
      * Object binary type
      */
