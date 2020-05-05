@@ -252,6 +252,9 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>gwt-maven-plugin</artifactId>
                     <version>${com.google.gwt.version}</version>
+                    <configuration>
+                        <jvm>/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/Home</jvm>
+                    </configuration>
                 </plugin>
 
                 <plugin>

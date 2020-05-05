@@ -56,7 +56,9 @@
         <guice.version>4.1.0</guice.version>
         <h2.version>1.4.199</h2.version>
         <httpcomponents.version>4.5.2</httpcomponents.version>
+        <jaxb-api.version>2.2.11</jaxb-api.version>
         <javassist.version>3.19.0-GA</javassist.version>
+        <javax-activation-api.version>1.2.0</javax-activation-api.version>
         <javax-annotation-api.version>1.2</javax-annotation-api.version>
         <javax-batch-api.version>1.0.1</javax-batch-api.version>
         <javax-inject.version>1</javax-inject.version>
@@ -125,7 +127,7 @@
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <jacoco.version>0.7.9</jacoco.version>
         <jacoco-extras.version>0.1.1</jacoco-extras.version>
-        <karaf-maven-plugin.version>4.1.1</karaf-maven-plugin.version>
+        <karaf-maven-plugin.version>4.2.2</karaf-maven-plugin.version>
         <license-maven-plugin.version>1.9</license-maven-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.5</nexus-staging-maven-plugin.version>
         <protoc-jar-maven-plugin.version>3.8.0</protoc-jar-maven-plugin.version>
@@ -138,7 +140,7 @@
 
         <!-- -->
         <!-- Database configuration for local installs and tests -->
-        <!-- Database host address is the one exported by the dev-tools/vagrant/Vagrantfile -->
+        <!-- Database host address is the one exported by the dev-tools/vagrant/grtVagrantfile -->
         <db.host>192.168.33.10</db.host>
         <db.name>kapuadb</db.name>
         <db.schema>kapuadb</db.schema>
@@ -1777,6 +1779,28 @@
                 <groupId>javax.cache</groupId>
                 <artifactId>cache-api</artifactId>
                 <version>1.1.1</version>
+            </dependency>
+
+            <!-- For Java 11 -->
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>${jaxb-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-core</artifactId>
+                <version>${jaxb-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sun.xml.bind</groupId>
+                <artifactId>jaxb-impl</artifactId>
+                <version>${jaxb-api.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.activation</groupId>
+                <artifactId>javax.activation-api</artifactId>
+                <version>${javax-activation-api.version}</version>
             </dependency>
 
         </dependencies>

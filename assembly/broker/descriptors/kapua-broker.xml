@@ -165,6 +165,8 @@
                 <include>com.google.inject:guice</include>
                 <include>com.google.protobuf:protobuf-java</include>
                 <include>com.h2database:h2</include>
+                <include>com.sun.xml.bind:jaxb-core</include>
+                <include>com.sun.xml.bind:jaxb-impl</include>
                 <include>com.tdunning:t-digest</include>
 
                 <include>commons-codec:commons-codec</include>
@@ -222,7 +224,8 @@
                 <include>org.springframework.security:spring-security-core</include>
                 <include>org.yaml:snakeyaml</include>
                 <include>javax.cache:cache-api</include>
-
+                <include>javax.xml.bind:jaxb-api</include>
+                <include>javax.activation:javax.activation-api</include>
                 <include>${pom.groupId}:kapua-account-api</include>
                 <include>${pom.groupId}:kapua-account-internal</include>
                 <include>${pom.groupId}:kapua-broker-api</include>
