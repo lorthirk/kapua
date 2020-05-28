@@ -22,6 +22,7 @@ import cucumber.api.CucumberOptions;
         features = "classpath:features/user/UserPermissionI9n.feature",
 
         glue = {"org.eclipse.kapua.qa.common",
+                "org.eclipse.kapua.qa.integration.steps",
                 "org.eclipse.kapua.service.account.steps",
                 "org.eclipse.kapua.service.user.steps",
                 "org.eclipse.kapua.service.authorization.steps",
@@ -38,8 +39,9 @@ import cucumber.api.CucumberOptions;
         },
         strict = true,
         monochrome = true)
-@CucumberProperty(key="kapua.config.url", value="")
-@CucumberProperty(key="datastore.client.class", value="org.eclipse.kapua.service.datastore.client.rest.RestDatastoreClient")
-@CucumberProperty(key="org.eclipse.kapua.qa.datastore.extraStartupDelay", value="5")
-@CucumberProperty(key="org.eclipse.kapua.qa.broker.extraStartupDelay", value="5")
+@CucumberProperty(key="test.type", value="integration")
+@CucumberProperty(key="commons.settings.hotswap", value="true")
+@CucumberProperty(key="commons.db.jdbcConnectionUrlResolver", value="DEFAULT")
+@CucumberProperty(key="commons.db.connection.scheme", value="jdbc:h2:tcp")
+@CucumberProperty(key="datastore.index.prefix", value="")
 public class RunUserPermissionI9nTest {}

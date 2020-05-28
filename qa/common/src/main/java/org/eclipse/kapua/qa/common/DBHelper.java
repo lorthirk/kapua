@@ -38,8 +38,6 @@ public class DBHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(DBHelper.class);
 
-    private static final boolean NO_EMBEDDED_SERVERS = Boolean.getBoolean("org.eclipse.kapua.qa.noEmbeddedServers");
-
     /**
      * Path to root of full DB scripts.
      */
@@ -65,10 +63,6 @@ public class DBHelper {
     private Connection connection;
 
     public void setup() {
-
-        if (NO_EMBEDDED_SERVERS) {
-            return;
-        }
         boolean h2TestServer = Boolean.parseBoolean(System.getProperty("test.h2.server", "false"))
                 || Boolean.parseBoolean(System.getenv("test.h2.server"));
 
@@ -117,10 +111,6 @@ public class DBHelper {
     }
 
     public void close() {
-
-        if (NO_EMBEDDED_SERVERS) {
-            return;
-        }
         if (connection != null) {
             try {
                 connection.close();
@@ -163,15 +153,18 @@ public class DBHelper {
 
     public void dropAll() throws SQLException {
 
-        String[] types = {"TABLE"};
-        ResultSet sqlResults = connection.getMetaData().getTables(null, null, "%", types);
+        if (!connection.isClosed()) {
+            String[] types = {"TABLE"};
 
-        while (sqlResults.next()) {
-            String sqlStatement = String.format("DROP TABLE %s", sqlResults.getString("TABLE_NAME").toUpperCase());
-            connection.prepareStatement(sqlStatement).execute();
+            ResultSet sqlResults = connection.getMetaData().getTables(null, null, "%", types);
+
+            while (sqlResults.next()) {
+                String sqlStatement = String.format("DROP TABLE %s", sqlResults.getString("TABLE_NAME").toUpperCase());
+                connection.prepareStatement(sqlStatement).execute();
+            }
+
+            this.close();
         }
-
-        this.close();
         KapuaCacheManager.invalidateAll();
     }
 }
