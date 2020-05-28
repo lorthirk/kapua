@@ -65,4 +65,8 @@ public interface DomainCreator extends KapuaEntityCreator<Domain> { // org.eclip
      */
     void setGroupable(boolean groupable);
 
+    String getServiceName();
+
+    void setServiceName(String serviceName);
+
 }
