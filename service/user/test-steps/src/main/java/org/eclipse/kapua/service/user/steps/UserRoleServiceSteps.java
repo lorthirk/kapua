@@ -12,15 +12,12 @@
 package org.eclipse.kapua.service.user.steps;
 
 import cucumber.api.Scenario;
-import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
-import cucumber.runtime.java.guice.ScenarioScoped;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.qa.common.StepData;
-import org.eclipse.kapua.qa.common.DBHelper;
 import org.eclipse.kapua.service.authorization.access.AccessRoleService;
 import org.eclipse.kapua.service.authorization.access.AccessRoleFactory;
 import org.eclipse.kapua.service.authorization.access.AccessInfo;
@@ -29,30 +26,41 @@ import org.eclipse.kapua.service.authorization.access.AccessRole;
 import org.eclipse.kapua.service.authorization.role.Role;
 import org.eclipse.kapua.service.user.User;
 
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 import java.util.ArrayList;
 
-@ScenarioScoped
+@Singleton
 public class UserRoleServiceSteps extends TestBase {
 
     private AccessRoleService accessRoleService;
     private AccessRoleFactory accessRoleFactory;
 
     @Inject
-    public UserRoleServiceSteps(StepData stepData, DBHelper dbHelper) {
-        super(stepData, dbHelper);
+    public UserRoleServiceSteps(StepData stepData) {
+        super(stepData);
     }
 
-    @Before
-    public void beforeScenario(Scenario scenario) {
-        super.beforeScenario(scenario);
+    @Before(value="@env_docker", order=10)
+    public void beforeScenarioDockerFull(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_embedded_minimal", order=10)
+    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    private void beforeInternal(Scenario scenario) {
+        updateScenario(scenario);
         accessRoleService = locator.getService(AccessRoleService.class);
         accessRoleFactory = locator.getFactory(AccessRoleFactory.class);
-    }
-
-    @After
-    public void afterScenario() {
-        super.afterScenario();
     }
 
     @And("^I add access role \"([^\"]*)\" to user \"([^\"]*)\"$")

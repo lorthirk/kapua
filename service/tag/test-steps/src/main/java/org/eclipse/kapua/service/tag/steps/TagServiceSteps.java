@@ -12,17 +12,14 @@
 package org.eclipse.kapua.service.tag.steps;
 
 import cucumber.api.Scenario;
-import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate;
-import org.eclipse.kapua.qa.common.DBHelper;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.qa.common.cucumber.CucConfig;
@@ -36,6 +33,9 @@ import org.eclipse.kapua.service.tag.TagListResult;
 import org.eclipse.kapua.service.tag.TagQuery;
 import org.eclipse.kapua.service.tag.TagService;
 import org.junit.Assert;
+
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +45,7 @@ import java.util.Set;
 /**
  * Implementation of Gherkin steps used in TagService.feature scenarios.
  */
-@ScenarioScoped
+@Singleton
 public class TagServiceSteps extends TestBase {
 
     /**
@@ -55,24 +55,33 @@ public class TagServiceSteps extends TestBase {
     private TagFactory tagFactory;
 
     @Inject
-    public TagServiceSteps(StepData stepData, DBHelper dbHelper) {
-        super(stepData, dbHelper);
+    public TagServiceSteps(StepData stepData) {
+        super(stepData);
     }
 
     // *************************************
     // Definition of Cucumber scenario steps
     // *************************************
 
-    @Before
-    public void beforeScenario(Scenario scenario) {
-        super.beforeScenario(scenario);
-        tagService = locator.getService(TagService.class);
-        tagFactory = locator.getFactory(TagFactory.class);
+    @Before(value="@env_docker", order=10)
+    public void beforeScenarioDockerFull(Scenario scenario) {
+        beforeInternal(scenario);
     }
 
-    @After
-    public void afterScenario() {
-        super.afterScenario();
+    @Before(value="@env_embedded_minimal", order=10)
+    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    private void beforeInternal(Scenario scenario) {
+        updateScenario(scenario);
+        tagService = locator.getService(TagService.class);
+        tagFactory = locator.getFactory(TagFactory.class);
     }
 
     @Given("^I configure the tag service$")

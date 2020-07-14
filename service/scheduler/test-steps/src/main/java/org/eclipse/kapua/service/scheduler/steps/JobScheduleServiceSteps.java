@@ -12,15 +12,12 @@
 package org.eclipse.kapua.service.scheduler.steps;
 
 import cucumber.api.Scenario;
-import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
-import cucumber.runtime.java.guice.ScenarioScoped;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate;
-import org.eclipse.kapua.qa.common.DBHelper;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.qa.common.cucumber.CucTriggerProperty;
@@ -34,6 +31,9 @@ import org.eclipse.kapua.service.scheduler.trigger.TriggerAttributes;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionQuery;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinition;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerProperty;
+
+import com.google.inject.Singleton;
+
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionAttributes;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionFactory;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionService;
@@ -46,7 +46,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-@ScenarioScoped
+@Singleton
 public class JobScheduleServiceSteps extends TestBase {
 
     private TriggerFactory triggerFactory;
@@ -67,8 +67,8 @@ public class JobScheduleServiceSteps extends TestBase {
 
     // Default constructor
     @Inject
-    public JobScheduleServiceSteps(StepData stepData, DBHelper dbHelper) {
-        super(stepData, dbHelper);
+    public JobScheduleServiceSteps(StepData stepData) {
+        super(stepData);
     }
 
     // ************************************************************************************
@@ -81,18 +81,27 @@ public class JobScheduleServiceSteps extends TestBase {
     // * Setup and tear-down steps                                                        *
     // ************************************************************************************
 
-    @Before
-    public void beforeScenario(Scenario scenario) {
-        super.beforeScenario(scenario);
+    @Before(value="@env_docker", order=10)
+    public void beforeScenarioDockerFull(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_embedded_minimal", order=10)
+    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    private void beforeInternal(Scenario scenario) {
+        updateScenario(scenario);
         triggerFactory = locator.getFactory(TriggerFactory.class);
         triggerService = locator.getService(TriggerService.class);
         triggerDefinitionFactory = locator.getFactory(TriggerDefinitionFactory.class);
         triggerDefinitionService = locator.getService(TriggerDefinitionService.class);
-    }
-
-    @After
-    public void afterScenario() {
-        super.afterScenario();
     }
 
     // ************************************************************************************

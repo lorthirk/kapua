@@ -13,15 +13,14 @@
 package org.eclipse.kapua.qa.common;
 
 import com.google.common.base.MoreObjects;
-import cucumber.api.java.After;
-import cucumber.runtime.java.guice.ScenarioScoped;
+import com.google.inject.Singleton;
+
 import org.eclipse.kapua.commons.configuration.KapuaConfigurableServiceSchemaUtilsWithResources;
 import org.eclipse.kapua.commons.jpa.JdbcConnectionUrlResolvers;
 import org.eclipse.kapua.commons.liquibase.KapuaLiquibaseClient;
 import org.eclipse.kapua.commons.service.internal.cache.KapuaCacheManager;
 import org.eclipse.kapua.commons.setting.system.SystemSetting;
 import org.eclipse.kapua.commons.setting.system.SystemSettingKey;
-import org.h2.tools.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +32,7 @@ import java.sql.SQLException;
 /**
  * Singleton for managing database creation and deletion inside Gherkin scenarios.
  */
-@ScenarioScoped
+@Singleton
 public class DBHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(DBHelper.class);
@@ -48,47 +47,10 @@ public class DBHelper {
      */
     private static final String DELETE_SCRIPT = "all_delete.sql";
 
-    private static boolean isSetup;
-
-    /**
-     * Web access to DB.
-     */
-    private static Server webServer;
-
-    /**
-     * TCP access to DB.
-     */
-    private static Server server;
-
     private Connection connection;
 
     public void setup() {
-        boolean h2TestServer = Boolean.parseBoolean(System.getProperty("test.h2.server", "false"))
-                || Boolean.parseBoolean(System.getenv("test.h2.server"));
-
-        if (isSetup) {
-            return;
-        }
-
-        isSetup = true;
-
-        if (h2TestServer) {
-            // Start external server to provide access to in mem H2 database
-            if ((webServer == null) && (server == null)) {
-                if (h2TestServer) {
-                    try {
-                        webServer = Server.createWebServer("-webAllowOthers", "-webPort", "8082").start();
-                        server = Server.createTcpServer("-tcpAllowOthers", "-tcpPort", "9092").start();
-                        logger.info("H2 TCP and Web server started.");
-                    } catch (SQLException e) {
-                        logger.warn("Error setting up H2 web server.", e);
-                    }
-                }
-            }
-        }
-
-        logger.info("Setting up embedded database");
-
+        logger.warn("########################### Called DBHelper ###########################");
         System.setProperty(SystemSettingKey.DB_JDBC_CONNECTION_URL_RESOLVER.key(), "H2");
         SystemSetting config = SystemSetting.getInstance();
         String dbUsername = config.getString(SystemSettingKey.DB_USERNAME);
@@ -118,27 +80,14 @@ public class DBHelper {
                 throw new RuntimeException(e);
             }
         }
-        if ((server != null) && (server.isRunning(true))) {
-            server.shutdown();
-            server = null;
-        }
-        if ((webServer != null) && (webServer.isRunning(true))) {
-            webServer.shutdown();
-            webServer = null;
-        }
-        isSetup = false;
     }
 
-    @After(order = HookPriorities.DATABASE)
     public void deleteAllAndClose() {
-
         try {
-            if (isSetup) {
-                deleteAll();
-            }
+            deleteAll();
         } finally {
             // close the connection
-            this.close();
+            close();
         }
     }
 

@@ -12,10 +12,12 @@
 @account
 @accountFindSelf
 @integration
+@env_none
 
 Feature: Self account find feature
   Finding self accounts require a different logic to be applied to the permission
 
+@setup
 Scenario: Initialize test environment
     Given Reset test shutdown
     And Init Jaxb Context
@@ -99,6 +101,7 @@ Scenario: Initialize test environment
     And I look for my account by name
     Then I am able to read my account info
 
+@teardown
 Scenario: Reset Security Context for all scenarios
   Given Set test shutdown
     And Reset Security Context

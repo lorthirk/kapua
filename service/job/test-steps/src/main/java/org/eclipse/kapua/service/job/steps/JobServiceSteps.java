@@ -13,13 +13,11 @@
 package org.eclipse.kapua.service.job.steps;
 
 import cucumber.api.Scenario;
-import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.job.engine.JobEngineFactory;
 import org.eclipse.kapua.job.engine.JobEngineService;
@@ -27,7 +25,6 @@ import org.eclipse.kapua.job.engine.JobStartOptions;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
-import org.eclipse.kapua.qa.common.DBHelper;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.qa.common.cucumber.CucConfig;
@@ -71,6 +68,8 @@ import org.eclipse.kapua.service.job.targets.JobTargetService;
 import org.eclipse.kapua.service.job.targets.JobTargetStatus;
 import org.joda.time.DateTime;
 
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -85,7 +84,7 @@ import java.util.Map;
 // * - Authorization Service                                                              *
 // ****************************************************************************************
 
-@ScenarioScoped
+@Singleton
 public class JobServiceSteps extends TestBase {
 
     // Job service objects
@@ -114,8 +113,8 @@ public class JobServiceSteps extends TestBase {
 
     // Default constructor
     @Inject
-    public JobServiceSteps(StepData stepData, DBHelper dbHelper) {
-        super(stepData, dbHelper);
+    public JobServiceSteps(StepData stepData) {
+        super(stepData);
     }
 
     // ************************************************************************************
@@ -128,9 +127,23 @@ public class JobServiceSteps extends TestBase {
     // * Setup and tear-down steps                                                        *
     // ************************************************************************************
 
-    @Before
-    public void beforeScenario(Scenario scenario) {
-        super.beforeScenario(scenario);
+    @Before(value="@env_docker", order=10)
+    public void beforeScenarioDockerFull(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_embedded_minimal", order=10)
+    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    private void beforeInternal(Scenario scenario) {
+        updateScenario(scenario);
         jobService = locator.getService(JobService.class);
         jobFactory = locator.getFactory(JobFactory.class);
         jobStepDefinitionService = locator.getService(JobStepDefinitionService.class);
@@ -143,11 +156,6 @@ public class JobServiceSteps extends TestBase {
         jobExecutionFactory = locator.getFactory(JobExecutionFactory.class);
         jobEngineService = locator.getService(JobEngineService.class);
         jobEngineFactory = locator.getFactory(JobEngineFactory.class);
-    }
-
-    @After
-    public void afterScenario() {
-        super.afterScenario();
     }
 
     // ************************************************************************************

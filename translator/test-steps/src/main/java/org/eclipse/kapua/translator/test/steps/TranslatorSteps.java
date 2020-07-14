@@ -12,15 +12,12 @@
 package org.eclipse.kapua.translator.test.steps;
 
 import cucumber.api.Scenario;
-import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import cucumber.runtime.java.guice.ScenarioScoped;
 import org.eclipse.kapua.KapuaException;
-import org.eclipse.kapua.qa.common.DBHelper;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.service.device.call.message.kura.KuraPayload;
@@ -41,6 +38,8 @@ import org.eclipse.kapua.transport.message.mqtt.MqttMessage;
 import org.eclipse.kapua.transport.message.mqtt.MqttPayload;
 import org.eclipse.kapua.transport.message.mqtt.MqttTopic;
 
+import com.google.inject.Singleton;
+
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
@@ -48,7 +47,7 @@ import java.util.List;
 /**
  * Implementation of Gherkin steps used in TranslatorUnitTests.feature scenarios.
  */
-@ScenarioScoped
+@Singleton
 public class TranslatorSteps extends TestBase {
 
     private ExampleTranslator exampleTranslator;
@@ -59,17 +58,31 @@ public class TranslatorSteps extends TestBase {
     private TranslatorDataKuraJms translatorDataKuraJms;
 
     @Inject
-    public TranslatorSteps(StepData stepData, DBHelper dbHelper) {
-        super(stepData, dbHelper);
+    public TranslatorSteps(StepData stepData) {
+        super(stepData);
     }
 
     // *************************************
     // Definition of Cucumber scenario steps
     // *************************************
 
-    @Before
-    public void beforeScenario(Scenario scenario) {
-        super.beforeScenario(scenario);
+    @Before(value="@env_docker", order=10)
+    public void beforeScenarioDockerFull(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_embedded_minimal", order=10)
+    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    @Before(value="@env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        beforeInternal(scenario);
+    }
+
+    private void beforeInternal(Scenario scenario) {
+        updateScenario(scenario);
         exampleTranslator = new ExampleTranslator();
 
         translatorDataMqttKura = new TranslatorDataMqttKura();
@@ -77,11 +90,6 @@ public class TranslatorSteps extends TestBase {
         translatorDataKuraMqtt = new TranslatorDataKuraMqtt();
         translatorDataJmsKura = new TranslatorDataJmsKura();
         translatorDataKuraJms = new TranslatorDataKuraJms();
-    }
-
-    @After
-    public void afterScenario() {
-        super.afterScenario();
     }
 
     @Given("^I try to translate from \"([^\"]*)\" to \"([^\"]*)\"$")

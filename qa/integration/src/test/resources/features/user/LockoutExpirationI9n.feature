@@ -12,6 +12,7 @@
 @user
 @lockoutExpiration
 @integration
+@env_none
 
 Feature: User and Credential expiration abd lockout features
   User Service has expiration value after which user is disabled.
@@ -20,7 +21,7 @@ Feature: User and Credential expiration abd lockout features
 
 Scenario: Init Security Context for all scenarios
   Given Reset test shutdown
-    And Init Jaxb Context
+  And Init Jaxb Context
   And Init Security Context
 
 #

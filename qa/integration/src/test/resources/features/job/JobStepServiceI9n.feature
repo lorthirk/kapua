@@ -12,13 +12,14 @@
 @jobs
 @jobStepService
 @integration
+@env_none
 
 Feature: Job step service CRUD tests
     The Job Step service is responsible for maintaining job steps.
 
 Scenario: Init Security Context for all scenarios
   Given Reset test shutdown
-    And Init Jaxb Context
+  And Init Jaxb Context
   And Init Security Context
 
 Scenario: Regular step creation

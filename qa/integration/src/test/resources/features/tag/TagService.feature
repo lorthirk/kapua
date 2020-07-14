@@ -11,6 +11,7 @@
 ###############################################################################
 @tag
 @integration
+@env_none
 
 Feature: Tag Service
   Tag Service is responsible for CRUD operations on Tags. This service is currently
@@ -19,7 +20,7 @@ Feature: Tag Service
 
 Scenario: Init Security Context for all scenarios
   Given Reset test shutdown
-    And Init Jaxb Context
+  And Init Jaxb Context
   And Init Security Context
 
   Scenario: Creating Unique Tag Without Description

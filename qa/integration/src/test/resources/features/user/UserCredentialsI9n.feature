@@ -12,13 +12,14 @@
 @user
 @userCredentials
 @integration
+@env_none
 
 Feature: Feature file for testing Password user credential
   This feature file provides test scenarios for user password credential.
 
 Scenario: Init Security Context for all scenarios
   Given Reset test shutdown
-    And Init Jaxb Context
+  And Init Jaxb Context
   And Init Security Context
 
   Scenario: Create a valid user with valid password credential
