@@ -32,6 +32,9 @@ import org.eclipse.kapua.service.tag.TagService;
 import org.eclipse.kapua.service.tag.internal.TagEntityManagerFactory;
 import org.eclipse.kapua.service.tag.internal.TagFactoryImpl;
 import org.eclipse.kapua.service.tag.internal.TagServiceImpl;
+import org.eclipse.kapua.service.user.UserService;
+import org.eclipse.kapua.service.user.internal.UserServiceImpl;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -81,6 +84,7 @@ public class CucumberWithPropertiesForTag extends CucumberWithProperties {
                 bind(TagEntityManagerFactory.class).toInstance(tagEntityManagerFactory);
                 bind(TagService.class).toInstance(new TagServiceImpl());
                 bind(TagFactory.class).toInstance(new TagFactoryImpl());
+                bind(UserService.class).toInstance(new UserServiceImpl());
             }
         };
 

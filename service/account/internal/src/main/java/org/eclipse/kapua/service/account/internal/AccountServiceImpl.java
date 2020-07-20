@@ -12,7 +12,12 @@
  *******************************************************************************/
 package org.eclipse.kapua.service.account.internal;
 
-import org.apache.commons.lang3.StringUtils;
+import javax.inject.Inject;
+import javax.persistence.TypedQuery;
+import javax.validation.constraints.NotNull;
+import java.util.Map;
+import java.util.Objects;
+
 import org.eclipse.kapua.KapuaDuplicateNameException;
 import org.eclipse.kapua.KapuaDuplicateNameInAnotherAccountError;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
@@ -43,11 +48,11 @@ import org.eclipse.kapua.service.account.AccountQuery;
 import org.eclipse.kapua.service.account.AccountService;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
+import org.eclipse.kapua.service.user.UserService;
 
-import javax.inject.Inject;
-import javax.persistence.TypedQuery;
-import java.util.Map;
-import java.util.Objects;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link AccountService} implementation.
@@ -59,10 +64,20 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
         implements AccountService {
 
     @Inject
+    private AccountFactory accountFactory;
+
+    @Inject
     private AuthorizationService authorizationService;
 
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserService userService;
+
+    private final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+
+    private static final String UNABLE_TO_RESOLVE = "Unable to resolve entity name";
 
     /**
      * Constructor.
@@ -140,6 +155,11 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
             // Set the parent account path
             String parentAccountPath = AccountDAO.find(em, null, accountCreator.getScopeId()).getParentAccountPath() + "/" + account.getId();
             account.setParentAccountPath(parentAccountPath);
+
+            if (isAccountPermitted(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.info)) {
+                updateAuditFields(account);
+            }
+
             return AccountDAO.update(em, account);
         }));
     }
@@ -216,10 +236,17 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(EntityManagerContainer.<Account>create().onResultHandler(em -> AccountDAO.update(em, account))
+        return entityManagerSession.doTransactedAction(EntityManagerContainer.<Account>create()
                 .onBeforeHandler(() -> {
                     entityCache.remove(null, account);
                     return null;
+                })
+                .onResultHandler(em -> {
+                    Account updatedAccount = AccountDAO.update(em, account);
+                    if (isAccountPermitted(updatedAccount.getScopeId(), updatedAccount.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.info)) {
+                        updateAuditFields(updatedAccount);
+                    }
+                    return updatedAccount;
                 }));
     }
 
@@ -306,20 +333,25 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
         //
         // Do find
-        return entityManagerSession.doAction(EntityManagerContainer.<Account>create().onResultHandler(em -> {
-                    Account account = AccountDAO.findByName(em, name);
-                    if (account != null) {
+        return entityManagerSession.doAction(EntityManagerContainer.<Account>create()
+                .onBeforeHandler(() -> {
+                    Account account = (Account) ((NamedEntityCache) entityCache).get(null, name);
+                    if (account != null) {  // TODO: can this be put in the onAfterResultHandler ?
                         checkAccountPermission(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.read);
                     }
                     return account;
-                }
-        ).onBeforeHandler(() -> {
-            Account account = (Account) ((NamedEntityCache) entityCache).get(null, name);
-            if (account != null) {  // TODO: can this be put in the onAfterResultHandler ?
-                checkAccountPermission(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.read);
-            }
-            return account;
-        }).onAfterHandler((entity) -> entityCache.put(entity)));
+                })
+                .onResultHandler(em -> {
+                            Account account = AccountDAO.findByName(em, name);
+                            if (account != null) {
+                                checkAccountPermission(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.read);
+                                if (isAccountPermitted(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.info)) {
+                                    updateAuditFields(account);
+                                }
+                            }
+                            return account;
+                        }
+                ).onAfterHandler(entity -> entityCache.put(entity)));
     }
 
     @Override
@@ -344,8 +376,17 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
             q = em.createNamedQuery("Account.findChildAccountsRecursive", Account.class);
             q.setParameter("parentAccountPath", "\\" + account.getParentAccountPath() + "/%");
 
-            result = new AccountListResultImpl();
+            result = accountFactory.newListResult();
             result.addItems(q.getResultList());
+            if (isAccountPermitted(account.getScopeId(), account.getId(), AccountDomains.ACCOUNT_DOMAIN, Actions.info)) {
+                result.getItems().forEach(a -> {
+                    try {
+                        updateAuditFields(a);
+                    } catch (KapuaException e) {
+                        logger.warn(UNABLE_TO_RESOLVE);
+                    }
+                });
+            }
             return result;
         }));
     }
@@ -363,7 +404,19 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
         //
         // Do query
         return entityManagerSession.doAction(
-                EntityManagerContainer.<AccountListResult>create().onResultHandler(em -> AccountDAO.query(em, query))
+                EntityManagerContainer.<AccountListResult>create().onResultHandler(em -> {
+                    AccountListResult accountListResult = AccountDAO.query(em, query);
+                    if (authorizationService.isPermitted(permissionFactory.newPermission(AccountDomains.ACCOUNT_DOMAIN, Actions.info, query.getScopeId()))) {
+                        accountListResult.getItems().forEach(a -> {
+                            try {
+                                updateAuditFields(a);
+                            } catch (KapuaException ex) {
+                                logger.warn(UNABLE_TO_RESOLVE);
+                            }
+                        });
+                    }
+                    return accountListResult;
+                })
         );
     }
 
@@ -400,9 +453,16 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
         //
         // Do find
         return entityManagerSession.doAction(
-                EntityManagerContainer.<Account>create().onResultHandler(em -> AccountDAO.find(em, null, accountId))
+                EntityManagerContainer.<Account>create()
                         .onBeforeHandler(() -> (Account) entityCache.get(null, accountId))
-                        .onAfterHandler((entity) -> entityCache.put(entity))
+                        .onResultHandler(em -> {
+                            Account account = AccountDAO.find(em, null, accountId);
+                            if (account != null) {
+                                updateAuditFields(account);
+                            }
+                            return account;
+                        })
+                        .onAfterHandler(entity -> entityCache.put(entity))
         );
     }
 
@@ -416,9 +476,23 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
         //
         // Do find
         return entityManagerSession.doAction(
-                EntityManagerContainer.<AccountListResult>create().onResultHandler(em -> AccountDAO.query(em,
-                        new AccountQueryImpl(accountId)))
+                EntityManagerContainer.<AccountListResult>create().onResultHandler(em -> {
+                    AccountListResult accountListResult = AccountDAO.query(em, accountFactory.newQuery(accountId));
+                    accountListResult.getItems().forEach(a -> {
+                        try {
+                            updateAuditFields(a);
+                        } catch (KapuaException e) {
+                            logger.warn(UNABLE_TO_RESOLVE);
+                        }
+                    });
+                    return accountListResult;
+                })
         );
+    }
+
+    private void updateAuditFields(@NotNull Account account) throws KapuaException {
+        account.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(account.getCreatedBy())));
+        account.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(account.getModifiedBy())));
     }
 
     @Override
@@ -441,4 +515,26 @@ public class AccountServiceImpl extends AbstractKapuaConfigurableResourceLimited
             authorizationService.checkPermission(permissionFactory.newPermission(domain, action, scopeId));
         }
     }
+
+    /**
+     * Same as {@link AccountServiceImpl#checkAccountPermission(KapuaId, KapuaId, Domain, Actions)} but returns {@literal true}
+     * or {@literal false} instead of throwing an exception
+     *
+     * @param scopeId
+     * @param accountId
+     * @param domain
+     * @param action
+     * @return {@code true} if authorized, {@code false} otherwise
+     * @throws KapuaException
+     */
+    private boolean isAccountPermitted(KapuaId scopeId, KapuaId accountId, Domain domain, Actions action) throws KapuaException {
+        if (KapuaSecurityUtils.getSession().getScopeId().equals(accountId)) {
+            // I'm looking for myself, so let's check if I have the correct permission
+            return authorizationService.isPermitted(permissionFactory.newPermission(domain, action, accountId));
+        } else {
+            // I'm looking for another account, so I need to check the permission on the account scope
+            return authorizationService.isPermitted(permissionFactory.newPermission(domain, action, scopeId));
+        }
+    }
+
 }

@@ -47,6 +47,7 @@ import org.eclipse.kapua.service.user.UserType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Objects;
 
@@ -298,6 +299,7 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
     }
 
     @Override
+    @Nullable
     public String getName(KapuaId userId) throws KapuaException {
         User user = entityManagerSession.doAction(EntityManagerContainer.<User>create()
                 .onBeforeHandler(() -> (User) entityCache.get(null, userId))

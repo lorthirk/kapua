@@ -60,6 +60,11 @@
             <artifactId>kapua-security-shiro</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.kapua</groupId>
+            <artifactId>kapua-user-internal</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- External testing dependencies -->
         <dependency>

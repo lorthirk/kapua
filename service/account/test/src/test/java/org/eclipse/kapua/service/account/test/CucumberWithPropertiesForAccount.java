@@ -28,6 +28,9 @@ import org.eclipse.kapua.service.account.internal.AccountServiceImpl;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.Permission;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
+import org.eclipse.kapua.service.user.UserService;
+import org.eclipse.kapua.service.user.internal.UserServiceImpl;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -72,6 +75,7 @@ public class CucumberWithPropertiesForAccount extends CucumberWithProperties {
                 bind(AccountEntityManagerFactory.class).toInstance(AccountEntityManagerFactory.getInstance());
                 bind(AccountService.class).toInstance(new AccountServiceImpl());
                 bind(AccountFactory.class).toInstance(new AccountFactoryImpl());
+                bind(UserService.class).toInstance(new UserServiceImpl());
             }
         };
 

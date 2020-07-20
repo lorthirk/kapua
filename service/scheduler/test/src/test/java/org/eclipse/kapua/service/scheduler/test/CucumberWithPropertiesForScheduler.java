@@ -40,6 +40,9 @@ import org.eclipse.kapua.service.scheduler.trigger.definition.quartz.TriggerDefi
 import org.eclipse.kapua.service.scheduler.trigger.definition.quartz.TriggerDefinitionServiceImpl;
 import org.eclipse.kapua.service.scheduler.trigger.quartz.TriggerFactoryImpl;
 import org.eclipse.kapua.service.scheduler.trigger.quartz.TriggerServiceImpl;
+import org.eclipse.kapua.service.user.UserService;
+import org.eclipse.kapua.service.user.internal.UserServiceImpl;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -93,6 +96,7 @@ public class CucumberWithPropertiesForScheduler extends CucumberWithProperties {
                 bind(TriggerFactory.class).toInstance(new TriggerFactoryImpl());
                 bind(TriggerDefinitionService.class).toInstance(new TriggerDefinitionServiceImpl());
                 bind(TriggerDefinitionFactory.class).toInstance(new TriggerDefinitionFactoryImpl());
+                bind(UserService.class).toInstance(new UserServiceImpl());
             }
         };
 
