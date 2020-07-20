@@ -174,11 +174,12 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create().onResultHandler(em -> UserDAO.update(em, user))
+        return entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create()
                 .onBeforeHandler(() -> {
                     entityCache.remove(null, user);
                     return null;
-                }));
+                })
+                .onResultHandler(em -> UserDAO.update(em, user)));
     }
 
     @Override
@@ -246,9 +247,10 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do the find
-        return entityManagerSession.doAction(EntityManagerContainer.<User>create().onResultHandler(em -> checkReadAccess(UserDAO.findByName(em, name)))
+        return entityManagerSession.doAction(EntityManagerContainer.<User>create()
                 .onBeforeHandler(() -> checkReadAccess((User) ((NamedEntityCache) entityCache).get(null, name)))
-                .onAfterHandler((entity) -> entityCache.put(entity)));
+                .onResultHandler(em -> checkReadAccess(UserDAO.findByName(em, name)))
+                .onAfterHandler(entity -> entityCache.put(entity)));
     }
 
     @Override
@@ -293,6 +295,16 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
         //
         // Do count
         return entityManagerSession.doAction(EntityManagerContainer.<Long>create().onResultHandler(em -> UserDAO.count(em, query)));
+    }
+
+    @Override
+    public String getName(KapuaId userId) throws KapuaException {
+        User user = entityManagerSession.doAction(EntityManagerContainer.<User>create()
+                .onBeforeHandler(() -> (User) entityCache.get(null, userId))
+                .onResultHandler(em -> checkReadAccess(UserDAO.findById(em, userId)))
+                .onAfterHandler(entity -> entityCache.put(entity))
+        );
+        return user != null ? user.getName() : null;
     }
 
     // -----------------------------------------------------------------------------------------

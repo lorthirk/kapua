@@ -16,6 +16,7 @@ import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.jpa.EntityManager;
 import org.eclipse.kapua.commons.service.internal.ServiceDAO;
+import org.eclipse.kapua.model.KapuaEntityAttributes;
 import org.eclipse.kapua.model.KapuaNamedEntityAttributes;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.KapuaQuery;
@@ -103,6 +104,10 @@ public class UserDAO extends ServiceDAO {
      */
     public static User findByExternalId(final EntityManager em, final String externalId) {
         return ServiceDAO.findByField(em, UserImpl.class, UserAttributes.EXTERNAL_ID, externalId);
+    }
+
+    public static User findById(final EntityManager em, final KapuaId userId) {
+        return ServiceDAO.findByField(em, UserImpl.class, KapuaEntityAttributes.ENTITY_ID, userId);
     }
 
     /**
