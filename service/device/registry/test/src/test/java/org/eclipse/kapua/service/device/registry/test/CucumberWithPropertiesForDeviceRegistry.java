@@ -38,6 +38,9 @@ import org.eclipse.kapua.service.device.registry.event.internal.DeviceEventServi
 import org.eclipse.kapua.service.device.registry.internal.DeviceEntityManagerFactory;
 import org.eclipse.kapua.service.device.registry.internal.DeviceFactoryImpl;
 import org.eclipse.kapua.service.device.registry.internal.DeviceRegistryServiceImpl;
+import org.eclipse.kapua.service.user.UserService;
+import org.eclipse.kapua.service.user.internal.UserServiceImpl;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -91,6 +94,8 @@ public class CucumberWithPropertiesForDeviceRegistry extends CucumberWithPropert
                 bind(DeviceEventService.class).toInstance(new DeviceEventServiceImpl());
                 bind(DeviceEventFactory.class).toInstance(new DeviceEventFactoryImpl());
                 bind(KapuaMessageFactory.class).toInstance(new KapuaMessageFactoryImpl());
+
+                bind(UserService.class).toInstance(new UserServiceImpl());
             }
         };
 

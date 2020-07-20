@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -32,9 +32,15 @@ import org.eclipse.kapua.service.device.management.registry.operation.DeviceMana
 import org.eclipse.kapua.service.device.management.registry.operation.DeviceManagementRegistryDomains;
 import org.eclipse.kapua.service.device.registry.Device;
 import org.eclipse.kapua.service.device.registry.DeviceRegistryService;
+import org.eclipse.kapua.service.user.UserService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @KapuaProvider
 public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaService implements DeviceManagementOperationRegistryService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DeviceManagementOperationRegistryServiceImpl.class);
 
     private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
 
@@ -42,6 +48,8 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
     private static final PermissionFactory PERMISSION_FACTORY = LOCATOR.getFactory(PermissionFactory.class);
 
     private static final DeviceRegistryService DEVICE_REGISTRY_SERVICE = LOCATOR.getService(DeviceRegistryService.class);
+
+    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     protected DeviceManagementOperationRegistryServiceImpl() {
         super(DeviceManagementOperationEntityManagerFactory.getInstance());
@@ -72,7 +80,7 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> DeviceManagementOperationDAO.create(em, creator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(DeviceManagementOperationDAO.create(em, creator)));
     }
 
     @Override
@@ -107,7 +115,7 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> DeviceManagementOperationDAO.update(em, entity));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(DeviceManagementOperationDAO.update(em, entity)));
     }
 
     @Override
@@ -123,7 +131,7 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> DeviceManagementOperationDAO.find(em, scopeId, entityId));
+        return entityManagerSession.doAction(em -> updateAuditFields(DeviceManagementOperationDAO.find(em, scopeId, entityId)));
     }
 
     @Override
@@ -141,7 +149,7 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
         DeviceManagementOperationQuery query = new DeviceManagementOperationQueryImpl(scopeId);
         query.setPredicate(query.attributePredicate(DeviceManagementOperationAttributes.OPERATION_ID, operationId));
 
-        return entityManagerSession.doAction(em -> DeviceManagementOperationDAO.query(em, query)).getFirstItem();
+        return entityManagerSession.doAction(em -> updateAuditFields(DeviceManagementOperationDAO.query(em, query).getFirstItem()));
     }
 
     @Override
@@ -156,7 +164,11 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> DeviceManagementOperationDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            DeviceManagementOperationListResult deviceManagementOperationListResult = DeviceManagementOperationDAO.query(em, query);
+            deviceManagementOperationListResult.getItems().forEach(this::updateAuditFields);
+            return deviceManagementOperationListResult;
+        });
     }
 
     @Override
@@ -195,4 +207,17 @@ public class DeviceManagementOperationRegistryServiceImpl extends AbstractKapuaS
         // Do delete
         entityManagerSession.doTransactedAction(em -> DeviceManagementOperationDAO.delete(em, scopeId, entityId));
     }
+
+    private DeviceManagementOperation updateAuditFields(DeviceManagementOperation deviceManagementOperation) {
+        try {
+            if (deviceManagementOperation != null && AUTHORIZATION_SERVICE.isPermitted(PERMISSION_FACTORY.newPermission(DeviceManagementRegistryDomains.DEVICE_MANAGEMENT_REGISTRY_DOMAIN, Actions.info, deviceManagementOperation.getScopeId()))) {
+                deviceManagementOperation.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(deviceManagementOperation.getCreatedBy())));
+                deviceManagementOperation.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(deviceManagementOperation.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return deviceManagementOperation;
+    }
+
 }

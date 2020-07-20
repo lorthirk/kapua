@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2016, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -14,9 +14,9 @@ package org.eclipse.kapua.service.device.registry.event.internal;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.KapuaOptimisticLockingException;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.service.internal.AbstractKapuaService;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
-import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.model.domain.Actions;
 import org.eclipse.kapua.model.id.KapuaId;
@@ -31,6 +31,8 @@ import org.eclipse.kapua.service.device.registry.event.DeviceEventCreator;
 import org.eclipse.kapua.service.device.registry.event.DeviceEventListResult;
 import org.eclipse.kapua.service.device.registry.event.DeviceEventService;
 import org.eclipse.kapua.service.device.registry.internal.DeviceEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,22 +53,21 @@ public class DeviceEventServiceImpl extends AbstractKapuaService implements Devi
 
     @Inject
     private AuthorizationService authorizationService;
+
     @Inject
     private PermissionFactory permissionFactory;
+
     @Inject
     private DeviceRegistryService deviceRegistryService;
+
+    @Inject
+    private UserService userService;
 
     /**
      * Constructor
      */
     public DeviceEventServiceImpl() {
         super(DeviceEntityManagerFactory.instance());
-
-        KapuaLocator locator = KapuaLocator.getInstance();
-
-        authorizationService = locator.getService(AuthorizationService.class);
-        permissionFactory = locator.getFactory(PermissionFactory.class);
-        deviceRegistryService = locator.getService(DeviceRegistryService.class);
     }
 
     // Operations
@@ -92,7 +93,7 @@ public class DeviceEventServiceImpl extends AbstractKapuaService implements Devi
         }
 
         // Create the event
-        DeviceEvent deviceEvent = entityManagerSession.doTransactedAction(entityManager -> DeviceEventDAO.create(entityManager, deviceEventCreator));
+        DeviceEvent deviceEvent = entityManagerSession.doTransactedAction(entityManager -> updateAuditFields(DeviceEventDAO.create(entityManager, deviceEventCreator)));
 
         updateLastEventOnDevice(deviceEvent);
 
@@ -111,7 +112,7 @@ public class DeviceEventServiceImpl extends AbstractKapuaService implements Devi
         // Check Access
         authorizationService.checkPermission(permissionFactory.newPermission(DeviceDomains.DEVICE_EVENT_DOMAIN, Actions.read, scopeId));
 
-        return entityManagerSession.doAction(em -> DeviceEventDAO.find(em, scopeId, entityId));
+        return entityManagerSession.doAction(em -> updateAuditFields(DeviceEventDAO.find(em, scopeId, entityId)));
     }
 
     @Override
@@ -125,7 +126,11 @@ public class DeviceEventServiceImpl extends AbstractKapuaService implements Devi
         // Check Access
         authorizationService.checkPermission(permissionFactory.newPermission(DeviceDomains.DEVICE_EVENT_DOMAIN, Actions.read, query.getScopeId()));
 
-        return entityManagerSession.doAction(em -> DeviceEventDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            DeviceEventListResult deviceEventListResult = DeviceEventDAO.query(em, query);
+            deviceEventListResult.getItems().forEach(this::updateAuditFields);
+            return deviceEventListResult;
+        });
     }
 
     @Override
@@ -200,6 +205,17 @@ public class DeviceEventServiceImpl extends AbstractKapuaService implements Devi
             }
         }
         while (retry < MAX_RETRY);
+    }
+
+    private DeviceEvent updateAuditFields(DeviceEvent deviceEvent) {
+        try {
+            if (deviceEvent != null && authorizationService.isPermitted(permissionFactory.newPermission(DeviceDomains.DEVICE_EVENT_DOMAIN, Actions.info, deviceEvent.getScopeId()))) {
+                deviceEvent.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(deviceEvent.getCreatedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOG.warn("Unable to resolve entity name");
+        }
+        return deviceEvent;
     }
 
 }

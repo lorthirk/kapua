@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2019, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -39,6 +39,7 @@ import org.eclipse.kapua.service.job.targets.JobTargetListResult;
 import org.eclipse.kapua.service.job.targets.JobTargetQuery;
 import org.eclipse.kapua.service.job.targets.JobTargetService;
 import org.eclipse.kapua.service.job.targets.JobTargetStatus;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
