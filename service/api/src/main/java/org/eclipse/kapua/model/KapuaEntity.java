@@ -33,7 +33,8 @@ import java.util.Date;
         "id",
         "scopeId",
         "createdOn",
-        "createdBy"})
+        "createdBy",
+        "createdByName"})
 public interface KapuaEntity extends KapuaSerializable {
 
     @XmlTransient
@@ -94,4 +95,22 @@ public interface KapuaEntity extends KapuaSerializable {
     @XmlElement(name = "createdBy")
     @XmlJavaTypeAdapter(KapuaIdAdapter.class)
     KapuaId getCreatedBy();
+
+    /**
+     * Gets the name of the User who created this {@link KapuaEntity}
+     *
+     * @return the name of the User who created this {@link KapuaEntity}
+     * @since 1.3.0
+     */
+    @XmlElement(name = "createdByName")
+    String getCreatedByName();
+
+    /**
+     * Sets the name of the User who created this {@link KapuaEntity}
+     *
+     * @param createdByName the name of the User who created this {@link KapuaEntity}
+     * @since 1.3.0
+     */
+    @XmlElement(name = "createdByName")
+    void setCreatedByName(String createdByName);
 }

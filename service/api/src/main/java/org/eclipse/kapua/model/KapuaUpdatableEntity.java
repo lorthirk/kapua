@@ -32,6 +32,7 @@ import java.util.Properties;
 @XmlType(propOrder = {
         "modifiedOn",
         "modifiedBy",
+        "modifiedByName",
         "optlock"
 })
 public interface KapuaUpdatableEntity extends KapuaEntity {
@@ -55,6 +56,11 @@ public interface KapuaUpdatableEntity extends KapuaEntity {
     @XmlElement(name = "modifiedBy")
     @XmlJavaTypeAdapter(KapuaIdAdapter.class)
     KapuaId getModifiedBy();
+
+    @XmlElement(name = "modifiedByName")
+    String getModifiedByName();
+
+    void setModifiedByName(String modifiedByName);
 
     /**
      * Gets the optlock

@@ -29,6 +29,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -64,6 +65,8 @@ public abstract class AbstractKapuaEntity implements KapuaEntity, Serializable {
     })
     protected KapuaEid createdBy;
 
+    @Transient
+    protected String createdByName;
     /**
      * Protected default constructor.<br>
      * Required by JPA.
@@ -125,6 +128,16 @@ public abstract class AbstractKapuaEntity implements KapuaEntity, Serializable {
     @Override
     public Date getCreatedOn() {
         return createdOn;
+    }
+
+    @Override
+    public String getCreatedByName() {
+        return createdByName;
+    }
+
+    @Override
+    public void setCreatedByName(String createdByName) {
+        this.createdByName = createdByName;
     }
 
     /**

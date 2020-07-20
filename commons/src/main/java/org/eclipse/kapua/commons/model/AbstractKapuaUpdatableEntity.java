@@ -31,6 +31,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PreUpdate;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.Version;
 import java.io.IOException;
 import java.util.Date;
@@ -66,6 +67,9 @@ public abstract class AbstractKapuaUpdatableEntity extends AbstractKapuaEntity i
     @Basic
     @Column(name = "properties")
     protected String properties;
+
+    @Transient
+    protected String modifiedByName;
 
     /**
      * Protected default constructor.<br>
@@ -134,6 +138,16 @@ public abstract class AbstractKapuaUpdatableEntity extends AbstractKapuaEntity i
      */
     public void setModifiedBy(KapuaId modifiedBy) {
         this.modifiedBy = KapuaEid.parseKapuaId(modifiedBy);
+    }
+
+    @Override
+    public String getModifiedByName() {
+        return modifiedByName;
+    }
+
+    @Override
+    public void setModifiedByName(String modifiedByName) {
+        this.modifiedByName = modifiedByName;
     }
 
     @Override
