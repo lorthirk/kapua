@@ -12,11 +12,11 @@
 package org.eclipse.kapua.integration.service.device;
 
 import cucumber.api.CucumberOptions;
-import org.eclipse.kapua.qa.common.cucumber.CucumberProperty;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
+import cucumber.api.junit.Cucumber;
+
 import org.junit.runner.RunWith;
 
-@RunWith(CucumberWithProperties.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
         features = {"classpath:features/broker/DeviceBrokerStealingLinkI9n.feature"},
         glue = {"org.eclipse.kapua.qa.common",
@@ -32,12 +32,4 @@ import org.junit.runner.RunWith;
                  },
         strict = true,
         monochrome = true )
-@CucumberProperty(key="test.type", value="integration")
-@CucumberProperty(key="test.name", value="RunDeviceBrokerStealingLinkI9nTest")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
-@CucumberProperty(key="commons.db.jdbcConnectionUrlResolver", value="DEFAULT")
-@CucumberProperty(key="commons.db.connection.scheme", value="jdbc:h2:tcp")
-@CucumberProperty(key="datastore.index.prefix", value="")
-@CucumberProperty(key="broker.ip", value="localhost")
-@CucumberProperty(key="kapua.config.url", value="")
 public class RunDeviceBrokerStealingLinkI9nTest {}

@@ -18,6 +18,7 @@ import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.broker.core.setting.BrokerSetting;
 import org.eclipse.kapua.locator.KapuaLocator;
@@ -146,6 +147,20 @@ public class BrokerSteps extends TestBase {
         super(stepData);
     }
 
+    @After(value="@setup")
+    public void setServices() {
+        KapuaLocator locator = KapuaLocator.getInstance();
+        devicePackageManagementService = locator.getService(DevicePackageManagementService.class);
+        deviceRegistryService = locator.getService(DeviceRegistryService.class);
+        deviceConfiguratiomManagementService = locator.getService(DeviceConfigurationManagementService.class);
+        deviceSnapshotManagementService = locator.getService(DeviceSnapshotManagementService.class);
+        deviceBundleManagementService = locator.getService(DeviceBundleManagementService.class);
+        deviceCommandManagementService = locator.getService(DeviceCommandManagementService.class);
+        deviceCommandFactory = locator.getFactory(DeviceCommandFactory.class);
+        deviceConnectionService = locator.getService(DeviceConnectionService.class);
+        deviceAssetManagementService = locator.getService(DeviceAssetManagementService.class);
+    }
+
     @Before(value="@env_docker", order=10)
     public void beforeScenarioDockerFull(Scenario scenario) {
         beforeInternal(scenario);
@@ -164,19 +179,9 @@ public class BrokerSteps extends TestBase {
     private void beforeInternal(Scenario scenario) {
         updateScenario(scenario);
         BrokerSetting.resetInstance();
-        KapuaLocator locator = KapuaLocator.getInstance();
-        devicePackageManagementService = locator.getService(DevicePackageManagementService.class);
-        deviceRegistryService = locator.getService(DeviceRegistryService.class);
-        deviceConfiguratiomManagementService = locator.getService(DeviceConfigurationManagementService.class);
-        deviceSnapshotManagementService = locator.getService(DeviceSnapshotManagementService.class);
-        deviceBundleManagementService = locator.getService(DeviceBundleManagementService.class);
-        deviceCommandManagementService = locator.getService(DeviceCommandManagementService.class);
-        deviceCommandFactory = locator.getFactory(DeviceCommandFactory.class);
-        deviceConnectionService = locator.getService(DeviceConnectionService.class);
-        deviceAssetManagementService = locator.getService(DeviceAssetManagementService.class);
     }
 
-    @After(order=0)
+    @After(value="not (@setup or @teardown)", order=10)
     public void afterScenario() {
         if (kuraDevice != null) {
             this.kuraDevice.mqttClientDisconnect();

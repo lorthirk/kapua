@@ -12,12 +12,11 @@
 package org.eclipse.kapua.integration.service.jobScheduling;
 
 import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-import org.eclipse.kapua.qa.common.cucumber.CucumberProperty;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.junit.runner.RunWith;
 
-@RunWith(CucumberWithProperties.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
         features = {
                 "classpath:features/jobScheduling/ExecuteOnDeviceConnectI9n.feature",
@@ -35,12 +34,5 @@ import org.junit.runner.RunWith;
                 "json:target/cucumber.json" },
         strict = true,
         monochrome = true)
-@CucumberProperty(key="test.type", value="integration")
-@CucumberProperty(key="test.name", value="RunExecuteOnDeviceConnectI9nTest")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
-@CucumberProperty(key="commons.db.jdbcConnectionUrlResolver", value="DEFAULT")
-@CucumberProperty(key="commons.db.connection.scheme", value="jdbc:h2:tcp")
-@CucumberProperty(key="datastore.index.prefix", value="")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
 public class RunExecuteOnDeviceConnectI9nTest {
 }

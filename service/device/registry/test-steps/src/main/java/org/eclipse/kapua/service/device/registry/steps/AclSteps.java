@@ -13,12 +13,15 @@
 package org.eclipse.kapua.service.device.registry.steps;
 
 import cucumber.api.Scenario;
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+
 import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.qa.common.TestBase;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.service.account.Account;
@@ -51,6 +54,8 @@ public class AclSteps extends TestBase {
     private static final String SYS_USERNAME = "kapua-sys";
 
     private static final String SYS_PASSWORD = "kapua-password";
+
+    protected KapuaLocator locator;
 
     /**
      * Mqtt device for listening and sending data from/to broker
@@ -112,23 +117,9 @@ public class AclSteps extends TestBase {
         super(stepData);
     }
 
-    @Before(value="@env_docker", order=10)
-    public void beforeScenarioDockerFull(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_embedded_minimal", order=10)
-    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_none", order=10)
-    public void beforeScenarioNone(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    private void beforeInternal(Scenario scenario) {
-        updateScenario(scenario);
+    @After(value="@setup")
+    public void setServices() {
+        locator = KapuaLocator.getInstance();
         authenticationService = locator.getService(AuthenticationService.class);
         credentialsFactory = locator.getFactory(CredentialsFactory.class);
         accountService = locator.getService(AccountService.class);
@@ -141,9 +132,12 @@ public class AclSteps extends TestBase {
         clientMqttMessage = new HashMap<>();
         listenerMqttMessage = new HashMap<>();
 
-        this.scenario = scenario;
-
         aclCreator = new AclCreator();
+    }
+
+    @Before(value="@env_docker or @env_embedded_minimal or @env_none", order=10)
+    public void beforeScenarioNone(Scenario scenario) {
+        updateScenario(scenario);
     }
 
     @Given("string \"(.*)\" is published to topic \"(.*)\" with client \"(.*)\"$")

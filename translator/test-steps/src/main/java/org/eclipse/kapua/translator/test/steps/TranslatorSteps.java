@@ -17,6 +17,7 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.qa.common.StepData;
 import org.eclipse.kapua.qa.common.TestBase;
@@ -60,36 +61,21 @@ public class TranslatorSteps extends TestBase {
     @Inject
     public TranslatorSteps(StepData stepData) {
         super(stepData);
+        exampleTranslator = new ExampleTranslator();
+        translatorDataMqttKura = new TranslatorDataMqttKura();
+        translatorResponseMqttKura = new TranslatorResponseMqttKura();
+        translatorDataKuraMqtt = new TranslatorDataKuraMqtt();
+        translatorDataJmsKura = new TranslatorDataJmsKura();
+        translatorDataKuraJms = new TranslatorDataKuraJms();
     }
 
     // *************************************
     // Definition of Cucumber scenario steps
     // *************************************
 
-    @Before(value="@env_docker", order=10)
+    @Before
     public void beforeScenarioDockerFull(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_embedded_minimal", order=10)
-    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_none", order=10)
-    public void beforeScenarioNone(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    private void beforeInternal(Scenario scenario) {
         updateScenario(scenario);
-        exampleTranslator = new ExampleTranslator();
-
-        translatorDataMqttKura = new TranslatorDataMqttKura();
-        translatorResponseMqttKura = new TranslatorResponseMqttKura();
-        translatorDataKuraMqtt = new TranslatorDataKuraMqtt();
-        translatorDataJmsKura = new TranslatorDataJmsKura();
-        translatorDataKuraJms = new TranslatorDataKuraJms();
     }
 
     @Given("^I try to translate from \"([^\"]*)\" to \"([^\"]*)\"$")

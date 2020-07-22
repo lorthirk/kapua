@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -9,49 +9,42 @@
  * Contributors:
  *     Eurotech - initial API and implementation
  *******************************************************************************/
-package org.eclipse.kapua.service.tag.test;
+package org.eclipse.kapua.service.security.test;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import cucumber.api.java.Before;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.metatype.KapuaMetatypeFactoryImpl;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.model.config.metatype.KapuaMetatypeFactory;
 import org.eclipse.kapua.qa.common.MockedLocator;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
-import org.eclipse.kapua.service.account.AccountFactory;
-import org.eclipse.kapua.service.account.AccountService;
-import org.eclipse.kapua.service.account.internal.AccountFactoryImpl;
-import org.eclipse.kapua.service.account.internal.AccountServiceImpl;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
+import org.eclipse.kapua.service.authorization.group.GroupFactory;
+import org.eclipse.kapua.service.authorization.group.GroupService;
+import org.eclipse.kapua.service.authorization.group.shiro.GroupFactoryImpl;
+import org.eclipse.kapua.service.authorization.group.shiro.GroupServiceImpl;
 import org.eclipse.kapua.service.authorization.permission.Permission;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
-import org.eclipse.kapua.service.tag.TagFactory;
-import org.eclipse.kapua.service.tag.TagService;
-import org.eclipse.kapua.service.tag.internal.TagEntityManagerFactory;
-import org.eclipse.kapua.service.tag.internal.TagFactoryImpl;
-import org.eclipse.kapua.service.tag.internal.TagServiceImpl;
-import org.junit.runners.model.InitializationError;
+import org.eclipse.kapua.service.authorization.role.RoleFactory;
+import org.eclipse.kapua.service.authorization.role.RolePermissionFactory;
+import org.eclipse.kapua.service.authorization.role.RoleService;
+import org.eclipse.kapua.service.authorization.role.shiro.RoleFactoryImpl;
+import org.eclipse.kapua.service.authorization.role.shiro.RolePermissionFactoryImpl;
+import org.eclipse.kapua.service.authorization.role.shiro.RoleServiceImpl;
+import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import java.io.IOException;
+@Singleton
+public class SecurityLocatorConfiguration {
 
-public class CucumberWithPropertiesForTag extends CucumberWithProperties {
-
-    public CucumberWithPropertiesForTag(Class<?> clazz) throws InitializationError, IOException {
-        super(clazz);
-        setupDI();
-    }
-
-    /**
-     * Setup DI with Google Guice DI.
-     * Create mocked and non mocked service under test and bind them with Guice.
-     * It is based on custom MockedLocator locator that is meant for sevice unit tests.
-     */
-    private static void setupDI() {
-
+    @Before(value="@setup", order=1)
+    public void setupDI() {
         MockedLocator mockedLocator = (MockedLocator) KapuaLocator.getInstance();
 
         AbstractModule module = new AbstractModule() {
@@ -72,15 +65,14 @@ public class CucumberWithPropertiesForTag extends CucumberWithProperties {
                 // Set KapuaMetatypeFactory for Metatype configuration
                 bind(KapuaMetatypeFactory.class).toInstance(new KapuaMetatypeFactoryImpl());
 
-                // binding Account related services
-                bind(AccountService.class).toInstance(Mockito.spy(new AccountServiceImpl()));
-                bind(AccountFactory.class).toInstance(Mockito.spy(new AccountFactoryImpl()));
-
-                // Inject actual Tag service related services
-                TagEntityManagerFactory tagEntityManagerFactory = TagEntityManagerFactory.getInstance();
-                bind(TagEntityManagerFactory.class).toInstance(tagEntityManagerFactory);
-                bind(TagService.class).toInstance(new TagServiceImpl());
-                bind(TagFactory.class).toInstance(new TagFactoryImpl());
+                // Inject actual Role service related services
+                AuthorizationEntityManagerFactory authorizationEntityManagerFactory = AuthorizationEntityManagerFactory.getInstance();
+                bind(AuthorizationEntityManagerFactory.class).toInstance(authorizationEntityManagerFactory);
+                bind(RoleService.class).toInstance(new RoleServiceImpl());
+                bind(RoleFactory.class).toInstance(new RoleFactoryImpl());
+                bind(RolePermissionFactory.class).toInstance(new RolePermissionFactoryImpl());
+                bind(GroupService.class).toInstance(new GroupServiceImpl());
+                bind(GroupFactory.class).toInstance(new GroupFactoryImpl());
             }
         };
 

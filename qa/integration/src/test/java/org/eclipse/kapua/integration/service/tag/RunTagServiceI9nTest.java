@@ -12,12 +12,11 @@
 package org.eclipse.kapua.integration.service.tag;
 
 import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-import org.eclipse.kapua.qa.common.cucumber.CucumberProperty;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.junit.runner.RunWith;
 
-@RunWith(CucumberWithProperties.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
         features = { "classpath:features/tag/TagService.feature"
         },
@@ -32,8 +31,5 @@ import org.junit.runner.RunWith;
                 "json:target/cucumber.json" },
         strict = true,
         monochrome = true)
-@CucumberProperty(key="test.type", value="unit")
-@CucumberProperty(key="test.name", value="RunTagServiceI9nTest")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
 public class RunTagServiceI9nTest {
 }

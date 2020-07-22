@@ -18,6 +18,12 @@ Feature: Job step definition service CRUD tests
     During regular runtime the step definitions are automatically extracted from the various
     service implementations.
 
+@setup
+@KapuaProperties("locator.class.impl=org.eclipse.kapua.qa.common.MockedLocator")
+Scenario: Initialize test environment
+    Given Init Jaxb Context
+    And Init Security Context
+
 Scenario: Regular step definition creation
 
     Given A regular definition creator with the name "TestDefinition" and 3 properties
@@ -154,3 +160,7 @@ Scenario: Query for step definitions
 Scenario: Step definition factory sanity checks
 
     Given I test the sanity of the step definition factory
+
+@teardown
+Scenario: Reset Security Context for all scenarios
+    Given Reset Security Context

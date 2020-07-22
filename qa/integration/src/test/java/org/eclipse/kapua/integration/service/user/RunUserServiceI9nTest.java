@@ -12,13 +12,12 @@
  *******************************************************************************/
 package org.eclipse.kapua.integration.service.user;
 
-import org.eclipse.kapua.qa.common.cucumber.CucumberProperty;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-@RunWith(CucumberWithProperties.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
         features = {
                 "classpath:features/user/UserServiceI9n.feature"
@@ -38,9 +37,4 @@ import cucumber.api.CucumberOptions;
                  },
         strict = true,
         monochrome = true)
-@CucumberProperty(key="test.type", value="embedded")
-@CucumberProperty(key="test.name", value="RunUserServiceI9nTest")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
-@CucumberProperty(key="org.eclipse.kapua.qa.datastore.extraStartupDelay", value="5")
-@CucumberProperty(key="org.eclipse.kapua.qa.broker.extraStartupDelay", value="5")
 public class RunUserServiceI9nTest {}

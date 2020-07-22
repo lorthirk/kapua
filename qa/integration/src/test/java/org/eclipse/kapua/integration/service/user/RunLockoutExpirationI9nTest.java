@@ -13,12 +13,11 @@
 package org.eclipse.kapua.integration.service.user;
 
 import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
 
-import org.eclipse.kapua.qa.common.cucumber.CucumberProperty;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.junit.runner.RunWith;
 
-@RunWith(CucumberWithProperties.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(
         features = "classpath:features/user/LockoutExpirationI9n.feature",
         glue = {"org.eclipse.kapua.qa.common",
@@ -31,7 +30,4 @@ import org.junit.runner.RunWith;
                  },
         strict = true,
         monochrome = true)
-@CucumberProperty(key="test.type", value="unit")
-@CucumberProperty(key="test.name", value="RunLockoutExpirationI9nTest")
-@CucumberProperty(key="commons.settings.hotswap", value="true")
 public class RunLockoutExpirationI9nTest {}

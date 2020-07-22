@@ -15,7 +15,6 @@ import cucumber.api.Scenario;
 
 import org.eclipse.kapua.commons.model.id.KapuaEid;
 import org.eclipse.kapua.commons.util.RandomUtils;
-import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.service.account.Account;
 import org.junit.Assert;
@@ -30,11 +29,6 @@ import java.util.Date;
 import java.util.Random;
 
 public class TestBase extends Assert {
-
-    /**
-     * Common locator instance
-     */
-    protected KapuaLocator locator;
 
     /**
      * Inter step data scratchpad.
@@ -61,7 +55,6 @@ public class TestBase extends Assert {
 
     protected TestBase(StepData stepData) {
         this.stepData = stepData;
-        locator = KapuaLocator.getInstance();
     }
 
     protected void updateScenario(Scenario scenario) {

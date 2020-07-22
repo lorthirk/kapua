@@ -14,6 +14,10 @@ package org.eclipse.kapua.service.device.registry.test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import cucumber.api.java.Before;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.metatype.KapuaMetatypeFactoryImpl;
 import org.eclipse.kapua.locator.KapuaLocator;
@@ -21,7 +25,6 @@ import org.eclipse.kapua.message.KapuaMessageFactory;
 import org.eclipse.kapua.message.internal.KapuaMessageFactoryImpl;
 import org.eclipse.kapua.model.config.metatype.KapuaMetatypeFactory;
 import org.eclipse.kapua.qa.common.MockedLocator;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.Permission;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
@@ -38,26 +41,15 @@ import org.eclipse.kapua.service.device.registry.event.internal.DeviceEventServi
 import org.eclipse.kapua.service.device.registry.internal.DeviceEntityManagerFactory;
 import org.eclipse.kapua.service.device.registry.internal.DeviceFactoryImpl;
 import org.eclipse.kapua.service.device.registry.internal.DeviceRegistryServiceImpl;
-import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import java.io.IOException;
+@Singleton
+public class DeviceRegistryLocatorConfiguration {
 
-public class CucumberWithPropertiesForDeviceRegistry extends CucumberWithProperties {
-
-    public CucumberWithPropertiesForDeviceRegistry(Class<?> clazz) throws InitializationError, IOException {
-        super(clazz);
-        setupDI();
-    }
-
-    /**
-     * Setup DI with Google Guice DI.
-     * Create mocked and non mocked service under test and bind them with Guice.
-     * It is based on custom MockedLocator locator that is meant for sevice unit tests.
-     */
-    private static void setupDI() {
-
+    @Before(value="@setup", order=1)
+    public void setupDI() {
+        System.setProperty("locator.class.impl", "org.eclipse.kapua.qa.common.MockedLocator");
         MockedLocator mockedLocator = (MockedLocator) KapuaLocator.getInstance();
 
         AbstractModule module = new AbstractModule() {

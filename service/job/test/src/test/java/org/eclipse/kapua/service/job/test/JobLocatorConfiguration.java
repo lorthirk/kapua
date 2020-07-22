@@ -14,12 +14,15 @@ package org.eclipse.kapua.service.job.test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
+import cucumber.api.java.Before;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.metatype.KapuaMetatypeFactoryImpl;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.model.config.metatype.KapuaMetatypeFactory;
 import org.eclipse.kapua.qa.common.MockedLocator;
-import org.eclipse.kapua.qa.common.cucumber.CucumberWithProperties;
 import org.eclipse.kapua.service.account.AccountFactory;
 import org.eclipse.kapua.service.account.AccountService;
 import org.eclipse.kapua.service.account.internal.AccountFactoryImpl;
@@ -56,26 +59,14 @@ import org.eclipse.kapua.service.scheduler.trigger.definition.quartz.TriggerDefi
 import org.eclipse.kapua.service.scheduler.trigger.definition.quartz.TriggerDefinitionServiceImpl;
 import org.eclipse.kapua.service.scheduler.trigger.quartz.TriggerFactoryImpl;
 import org.eclipse.kapua.service.scheduler.trigger.quartz.TriggerServiceImpl;
-import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import java.io.IOException;
+@Singleton
+public class JobLocatorConfiguration {
 
-public class CucumberWithPropertiesForJob extends CucumberWithProperties {
-
-    public CucumberWithPropertiesForJob(Class<?> clazz) throws InitializationError, IOException {
-        super(clazz);
-        setupDI();
-    }
-
-    /**
-     * Setup DI with Google Guice DI.
-     * Create mocked and non mocked service under test and bind them with Guice.
-     * It is based on custom MockedLocator locator that is meant for sevice unit tests.
-     */
-    private static void setupDI() {
-
+    @Before(value="@setup", order=1)
+    public void setupDI() {
         MockedLocator mockedLocator = (MockedLocator) KapuaLocator.getInstance();
 
         AbstractModule module = new AbstractModule() {

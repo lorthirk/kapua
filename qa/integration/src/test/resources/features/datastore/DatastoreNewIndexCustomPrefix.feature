@@ -12,14 +12,13 @@
 ###############################################################################
 @datastore
 @datastoreNewIndexCustomPrefix
-@integration
 @env_docker
 
 Feature: Datastore tests
 
+@setup
   Scenario: Start full docker environment
-    Given Reset test shutdown
-    And Init Jaxb Context
+    Given Init Jaxb Context
     And Init Security Context
     And Start full docker environment
 
@@ -28,6 +27,7 @@ Feature: Datastore tests
   Index gets created when user publishes data.
 
     Given Server with host "127.0.0.1" on port "9200"
+    And I wait for 3 seconds
     When I delete all indices
     And I login as user with name "kapua-sys" and password "kapua-password"
     And I select account "kapua-sys"
@@ -40,6 +40,6 @@ Feature: Datastore tests
 #    And REST response containing text "custom-prefix-1-2018-01"
     And I delete all indices
 
+@teardown
   Scenario: Stop full docker environment
-    Given Set test shutdown
-    And Stop full docker environment
+    Given Stop full docker environment

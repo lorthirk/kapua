@@ -12,10 +12,13 @@
 package org.eclipse.kapua.service.scheduler.steps;
 
 import cucumber.api.Scenario;
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
+
 import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate;
 import org.eclipse.kapua.qa.common.StepData;
@@ -71,6 +74,15 @@ public class JobScheduleServiceSteps extends TestBase {
         super(stepData);
     }
 
+    @After(value="@setup")
+    public void setServices() {
+        KapuaLocator locator = KapuaLocator.getInstance();
+        triggerFactory = locator.getFactory(TriggerFactory.class);
+        triggerService = locator.getService(TriggerService.class);
+        triggerDefinitionFactory = locator.getFactory(TriggerDefinitionFactory.class);
+        triggerDefinitionService = locator.getService(TriggerDefinitionService.class);
+    }
+
     // ************************************************************************************
     // ************************************************************************************
     // * Definition of Cucumber scenario steps                                            *
@@ -81,27 +93,9 @@ public class JobScheduleServiceSteps extends TestBase {
     // * Setup and tear-down steps                                                        *
     // ************************************************************************************
 
-    @Before(value="@env_docker", order=10)
+    @Before
     public void beforeScenarioDockerFull(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_embedded_minimal", order=10)
-    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_none", order=10)
-    public void beforeScenarioNone(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    private void beforeInternal(Scenario scenario) {
         updateScenario(scenario);
-        triggerFactory = locator.getFactory(TriggerFactory.class);
-        triggerService = locator.getService(TriggerService.class);
-        triggerDefinitionFactory = locator.getFactory(TriggerDefinitionFactory.class);
-        triggerDefinitionService = locator.getService(TriggerDefinitionService.class);
     }
 
     // ************************************************************************************

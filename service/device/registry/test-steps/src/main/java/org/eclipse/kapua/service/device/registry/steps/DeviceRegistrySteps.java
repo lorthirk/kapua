@@ -15,14 +15,17 @@ import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import cucumber.api.Scenario;
+import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.model.id.KapuaEid;
 import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
+import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.message.KapuaMessageFactory;
 import org.eclipse.kapua.message.KapuaPosition;
 import org.eclipse.kapua.message.device.lifecycle.KapuaAppsChannel;
@@ -187,23 +190,14 @@ public class DeviceRegistrySteps extends TestBase {
     // * Setup and tear-down steps                                                        *
     // ************************************************************************************
 
-    @Before(value="@env_docker", order=10)
-    public void beforeScenarioDockerFull(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_embedded_minimal", order=10)
-    public void beforeScenarioEmbeddedMinimal(Scenario scenario) {
-        beforeInternal(scenario);
-    }
-
-    @Before(value="@env_none", order=10)
+    @Before(value="@env_docker or @env_embedded_minimal or @env_none", order=10)
     public void beforeScenarioNone(Scenario scenario) {
-        beforeInternal(scenario);
+        updateScenario(scenario);
     }
 
-    private void beforeInternal(Scenario scenario) {
-        updateScenario(scenario);
+    @After(value="@setup")
+    public void setServices() {
+        KapuaLocator locator = KapuaLocator.getInstance();
         deviceRegistryService = locator.getService(DeviceRegistryService.class);
         deviceFactory = locator.getFactory(DeviceFactory.class);
 
