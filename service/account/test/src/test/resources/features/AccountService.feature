@@ -161,21 +161,19 @@ Scenario: A newly created account must have some metadata
     Given I create a generic account with name "test_acc_11"
     Then The account has metadata
 
-Scenario: It should not be possible to change the configuration items
-    Values of the supported configurationm items must be modifiable.
+Scenario: It is possible to change the configuration items
+Values of the supported configurationm items must be modifiable.
 
     Given I create a generic account with name "test_acc_11"
-    When I expect the exception "org.eclipse.kapua.KapuaException"
     When I configure "integer" item "maxNumberChildEntities" to "5"
-    Then An exception was thrown
-    #Then The config item "maxNumberChildEntities" is set to "5"
+    Then The config item "maxNumberChildEntities" is set to "5"
 
 Scenario: Setting configuration without mandatory items must raise an error
     Mandatory configuration items must always be set. Trying to set configuration items without
     specifying the mandatory items must raise an error.
 
     Given I create a generic account with name "test_acc_11"
-    When I expect the exception "org.eclipse.kapua.KapuaException"
+    And I expect the exception "KapuaConfigurationException" with the text "Required configuration attribute missing"
     When I configure "integer" item "ArbitraryUnknownItem" to "5"
     Then An exception was thrown
 
