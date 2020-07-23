@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -38,11 +38,15 @@ import org.eclipse.kapua.service.endpoint.EndpointInfoFactory;
 import org.eclipse.kapua.service.endpoint.EndpointInfoListResult;
 import org.eclipse.kapua.service.endpoint.EndpointInfoQuery;
 import org.eclipse.kapua.service.endpoint.EndpointInfoService;
+import org.eclipse.kapua.service.user.UserService;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link EndpointInfoService} implementation.
@@ -54,12 +58,16 @@ public class EndpointInfoServiceImpl
         extends AbstractKapuaConfigurableResourceLimitedService<EndpointInfo, EndpointInfoCreator, EndpointInfoService, EndpointInfoListResult, EndpointInfoQuery, EndpointInfoFactory>
         implements EndpointInfoService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(EndpointInfoServiceImpl.class);
+
     private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
 
     private static final AccountService ACCOUNT_SERVICE = LOCATOR.getService(AccountService.class);
 
     private static final AuthorizationService AUTHORIZATION_SERVICE = LOCATOR.getService(AuthorizationService.class);
     private static final PermissionFactory PERMISSION_FACTORY = LOCATOR.getFactory(PermissionFactory.class);
+
+    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     private static final EndpointInfoFactory ENDPOINT_INFO_FACTORY = LOCATOR.getFactory(EndpointInfoFactory.class);
 
@@ -99,7 +107,7 @@ public class EndpointInfoServiceImpl
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> EndpointInfoDAO.create(em, endpointInfoCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(EndpointInfoDAO.create(em, endpointInfoCreator)));
     }
 
     @Override
@@ -133,7 +141,7 @@ public class EndpointInfoServiceImpl
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> EndpointInfoDAO.update(em, endpointInfo));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(EndpointInfoDAO.update(em, endpointInfo)));
     }
 
     @Override
@@ -162,7 +170,7 @@ public class EndpointInfoServiceImpl
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> EndpointInfoDAO.find(em, scopeId, endpointInfoId));
+        return entityManagerSession.doAction(em -> updateAuditFields(EndpointInfoDAO.find(em, scopeId, endpointInfoId)));
     }
 
     @Override
@@ -204,6 +212,7 @@ public class EndpointInfoServiceImpl
                 query.setScopeId(originalScopeId);
             }
 
+            endpointInfoListResult.getItems().forEach(this::updateAuditFields);
             return endpointInfoListResult;
         });
     }
@@ -298,4 +307,17 @@ public class EndpointInfoServiceImpl
         long totalCount = EndpointInfoDAO.count(em, totalQuery);
         return totalCount != 0;
     }
+
+    private EndpointInfo updateAuditFields(EndpointInfo endpointInfo) {
+        try {
+            if (endpointInfo != null && AUTHORIZATION_SERVICE.isPermitted(PERMISSION_FACTORY.newPermission(EndpointInfoDomains.ENDPOINT_INFO_DOMAIN, Actions.info, endpointInfo.getScopeId()))) {
+                endpointInfo.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(endpointInfo.getCreatedBy())));
+                endpointInfo.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(endpointInfo.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return endpointInfo;
+    }
+
 }
