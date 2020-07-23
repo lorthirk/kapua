@@ -13,6 +13,7 @@ package org.eclipse.kapua.service.scheduler.trigger.definition.quartz;
 
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.service.internal.AbstractKapuaService;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaProvider;
@@ -27,8 +28,12 @@ import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinition;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionCreator;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionListResult;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionService;
+import org.eclipse.kapua.service.user.UserService;
 
 import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link TriggerDefinitionService} exposes APIs to manage {@link TriggerDefinition} objects.<br>
@@ -39,11 +44,16 @@ import javax.inject.Inject;
 @KapuaProvider
 public class TriggerDefinitionServiceImpl extends AbstractKapuaService implements TriggerDefinitionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TriggerDefinitionServiceImpl.class);
+
     @Inject
     private AuthorizationService authorizationService;
 
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserService userService;
 
     public TriggerDefinitionServiceImpl() {
         super(SchedulerEntityManagerFactory.getInstance());
@@ -65,7 +75,7 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> TriggerDefinitionDAO.create(em, creator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(TriggerDefinitionDAO.create(em, creator)));
     }
 
     @Override
@@ -82,7 +92,7 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
         // Check access
         authorizationService.checkPermission(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.write, null));
 
-        return entityManagerSession.doTransactedAction(em -> TriggerDefinitionDAO.update(em, triggerDefinition));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(TriggerDefinitionDAO.update(em, triggerDefinition)));
     }
 
     @Override
@@ -97,7 +107,7 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> TriggerDefinitionDAO.find(em, stepDefinitionId));
+        return entityManagerSession.doAction(em -> updateAuditFields(TriggerDefinitionDAO.find(em, stepDefinitionId)));
     }
 
     @Override
@@ -112,7 +122,7 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> TriggerDefinitionDAO.find(em, scopeId, stepDefinitionId));
+        return entityManagerSession.doAction(em -> updateAuditFields(TriggerDefinitionDAO.find(em, scopeId, stepDefinitionId)));
     }
 
     @Override
@@ -130,7 +140,7 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
                 // Check Access
                 authorizationService.checkPermission(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.read, KapuaId.ANY));
             }
-            return triggerDefinition;
+            return updateAuditFields(triggerDefinition);
         });
     }
 
@@ -146,7 +156,11 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> TriggerDefinitionDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            TriggerDefinitionListResult triggerDefinitionListResult = TriggerDefinitionDAO.query(em, query);
+            triggerDefinitionListResult.getItems().forEach(this::updateAuditFields);
+            return triggerDefinitionListResult;
+        });
     }
 
     @Override
@@ -184,6 +198,18 @@ public class TriggerDefinitionServiceImpl extends AbstractKapuaService implement
 
             return TriggerDefinitionDAO.delete(em, scopeId, stepDefinitionId);
         });
-
     }
+
+    private TriggerDefinition updateAuditFields(TriggerDefinition triggerDefinition) {
+        try {
+            if (triggerDefinition != null && authorizationService.isPermitted(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.info, triggerDefinition.getScopeId()))) {
+                triggerDefinition.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(triggerDefinition.getCreatedBy())));
+                triggerDefinition.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(triggerDefinition.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return triggerDefinition;
+    }
+
 }

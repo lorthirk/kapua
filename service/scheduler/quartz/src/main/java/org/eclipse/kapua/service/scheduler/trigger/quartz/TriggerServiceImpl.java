@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -17,6 +17,7 @@ import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaErrorCodes;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.model.domain.Actions;
@@ -25,6 +26,7 @@ import org.eclipse.kapua.model.query.KapuaQuery;
 import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
+import org.eclipse.kapua.service.job.JobDomains;
 import org.eclipse.kapua.service.scheduler.SchedulerDomains;
 import org.eclipse.kapua.service.scheduler.quartz.SchedulerEntityManagerFactory;
 import org.eclipse.kapua.service.scheduler.quartz.driver.QuartzTriggerDriver;
@@ -40,6 +42,8 @@ import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinition;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionFactory;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionService;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerProperty;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
@@ -65,13 +69,18 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
     @Inject
     private AuthorizationService authorizationService;
+
     @Inject
     private PermissionFactory permissionFactory;
 
     @Inject
     private TriggerDefinitionService triggerDefinitionService;
+
     @Inject
     private TriggerDefinitionFactory triggerDefinitionFactory;
+
+    @Inject
+    private UserService userService;
 
     private static TriggerDefinition intervalJobTriggerDefinition;
     private static TriggerDefinition cronJobTriggerDefinition;
@@ -153,7 +162,7 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
                     QuartzTriggerDriver.createCronJobTrigger(trigger);
                 }
 
-                return trigger;
+                return updateAuditFields(trigger);
             });
         } catch (TriggerNeverFiresException tnfe) {
             throw new KapuaException(KapuaErrorCodes.TRIGGER_NEVER_FIRE, tnfe);
@@ -363,4 +372,17 @@ public class TriggerServiceImpl extends AbstractKapuaConfigurableResourceLimited
             }
         }
     }
+
+    private Trigger updateAuditFields(Trigger trigger) {
+        try {
+            if (trigger != null && authorizationService.isPermitted(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.info, trigger.getScopeId()))) {
+                trigger.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(trigger.getCreatedBy())));
+                trigger.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(trigger.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOG.warn("Unable to resolve entity name");
+        }
+        return trigger;
+    }
+
 }
