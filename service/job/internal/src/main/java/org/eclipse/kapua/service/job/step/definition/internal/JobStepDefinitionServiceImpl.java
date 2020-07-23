@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2018 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -14,6 +14,7 @@ package org.eclipse.kapua.service.job.step.definition.internal;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.model.domain.Actions;
@@ -29,8 +30,12 @@ import org.eclipse.kapua.service.job.step.definition.JobStepDefinitionFactory;
 import org.eclipse.kapua.service.job.step.definition.JobStepDefinitionListResult;
 import org.eclipse.kapua.service.job.step.definition.JobStepDefinitionQuery;
 import org.eclipse.kapua.service.job.step.definition.JobStepDefinitionService;
+import org.eclipse.kapua.service.user.UserService;
 
 import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link JobStepDefinitionService} exposes APIs to manage JobStepDefinition objects.<br>
@@ -45,10 +50,16 @@ public class JobStepDefinitionServiceImpl
         AbstractKapuaConfigurableResourceLimitedService<JobStepDefinition, JobStepDefinitionCreator, JobStepDefinitionService, JobStepDefinitionListResult, JobStepDefinitionQuery, JobStepDefinitionFactory>
         implements JobStepDefinitionService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobStepDefinitionServiceImpl.class);
+
     @Inject
     private AuthorizationService authorizationService;
+
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserService userService;
 
     public JobStepDefinitionServiceImpl() {
         super(JobStepDefinitionService.class.getName(), JobDomains.JOB_DOMAIN, JobEntityManagerFactory.getInstance(), JobStepDefinitionService.class, JobStepDefinitionFactory.class);
@@ -70,7 +81,7 @@ public class JobStepDefinitionServiceImpl
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> JobStepDefinitionDAO.create(em, creator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobStepDefinitionDAO.create(em, creator)));
     }
 
     @Override
@@ -87,7 +98,7 @@ public class JobStepDefinitionServiceImpl
         // Check access
         authorizationService.checkPermission(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.write, null));
 
-        return entityManagerSession.doTransactedAction(em -> JobStepDefinitionDAO.update(em, jobStepDefinition));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobStepDefinitionDAO.update(em, jobStepDefinition)));
     }
 
     @Override
@@ -102,7 +113,7 @@ public class JobStepDefinitionServiceImpl
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> JobStepDefinitionDAO.find(em, scopeId, stepDefinitionId));
+        return entityManagerSession.doAction(em -> updateAuditFields(JobStepDefinitionDAO.find(em, scopeId, stepDefinitionId)));
     }
 
     @Override
@@ -115,7 +126,7 @@ public class JobStepDefinitionServiceImpl
         // Do find
         return entityManagerSession.doAction(em -> {
 
-            JobStepDefinition jobStepDefinition = JobStepDefinitionDAO.findByName(em, name);
+            JobStepDefinition jobStepDefinition = updateAuditFields(JobStepDefinitionDAO.findByName(em, name));
             if (jobStepDefinition != null) {
                 //
                 // Check Access
@@ -137,7 +148,11 @@ public class JobStepDefinitionServiceImpl
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> JobStepDefinitionDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            JobStepDefinitionListResult jobStepDefinitionListResult = JobStepDefinitionDAO.query(em, query);
+            jobStepDefinitionListResult.getItems().forEach(this::updateAuditFields);
+            return jobStepDefinitionListResult;
+        });
     }
 
     @Override
@@ -175,6 +190,18 @@ public class JobStepDefinitionServiceImpl
 
             return JobStepDefinitionDAO.delete(em, scopeId, stepDefinitionId);
         });
-
     }
+
+    private JobStepDefinition updateAuditFields(JobStepDefinition jobStepDefinition) {
+        try {
+            if (jobStepDefinition != null && authorizationService.isPermitted(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.info, jobStepDefinition.getScopeId()))) {
+                jobStepDefinition.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(jobStepDefinition.getCreatedBy())));
+                jobStepDefinition.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(jobStepDefinition.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return jobStepDefinition;
+    }
+
 }

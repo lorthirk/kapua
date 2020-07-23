@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -14,6 +14,7 @@ package org.eclipse.kapua.service.job.targets.internal;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
@@ -30,6 +31,10 @@ import org.eclipse.kapua.service.job.targets.JobTargetFactory;
 import org.eclipse.kapua.service.job.targets.JobTargetListResult;
 import org.eclipse.kapua.service.job.targets.JobTargetQuery;
 import org.eclipse.kapua.service.job.targets.JobTargetService;
+import org.eclipse.kapua.service.user.UserService;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link JobTargetService} implementation
@@ -40,10 +45,14 @@ import org.eclipse.kapua.service.job.targets.JobTargetService;
 public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimitedService<JobTarget, JobTargetCreator, JobTargetService, JobTargetListResult, JobTargetQuery, JobTargetFactory>
         implements JobTargetService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobTargetServiceImpl.class);
+
     private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
 
     private static final AuthorizationService AUTHORIZATION_SERVICE = LOCATOR.getService(AuthorizationService.class);
     private static final PermissionFactory PERMISSION_FACTORY = LOCATOR.getFactory(PermissionFactory.class);
+
+    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     public JobTargetServiceImpl() {
         super(JobTargetService.class.getName(), JobDomains.JOB_DOMAIN, JobEntityManagerFactory.getInstance(), JobTargetService.class, JobTargetFactory.class);
@@ -62,7 +71,7 @@ public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimit
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> JobTargetDAO.create(em, creator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobTargetDAO.create(em, creator)));
     }
 
     @Override
@@ -85,7 +94,7 @@ public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimit
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> JobTargetDAO.update(em, jobTarget));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobTargetDAO.update(em, jobTarget)));
     }
 
     @Override
@@ -123,7 +132,7 @@ public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimit
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> JobTargetDAO.find(em, scopeId, jobTargetId));
+        return entityManagerSession.doAction(em -> updateAuditFields(JobTargetDAO.find(em, scopeId, jobTargetId)));
     }
 
     @Override
@@ -138,7 +147,11 @@ public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimit
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> JobTargetDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            JobTargetListResult jobTargetListResult = JobTargetDAO.query(em, query);
+            jobTargetListResult.getItems().forEach(this::updateAuditFields);
+            return jobTargetListResult;
+        });
     }
 
     @Override
@@ -155,4 +168,17 @@ public class JobTargetServiceImpl extends AbstractKapuaConfigurableResourceLimit
         // Do query
         return entityManagerSession.doAction(em -> JobTargetDAO.count(em, query));
     }
+
+    private JobTarget updateAuditFields(JobTarget jobTarget) {
+        try {
+            if (jobTarget != null && AUTHORIZATION_SERVICE.isPermitted(PERMISSION_FACTORY.newPermission(JobDomains.JOB_DOMAIN, Actions.info, jobTarget.getScopeId()))) {
+                jobTarget.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(jobTarget.getCreatedBy())));
+                jobTarget.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(jobTarget.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return jobTarget;
+    }
+
 }

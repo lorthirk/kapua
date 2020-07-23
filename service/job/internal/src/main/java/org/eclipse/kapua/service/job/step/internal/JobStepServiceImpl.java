@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -16,6 +16,7 @@ import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaEntityUniquenessException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
@@ -39,11 +40,15 @@ import org.eclipse.kapua.service.job.step.JobStepService;
 import org.eclipse.kapua.service.job.step.definition.JobStepDefinition;
 import org.eclipse.kapua.service.job.step.definition.JobStepDefinitionService;
 import org.eclipse.kapua.service.job.step.definition.JobStepProperty;
+import org.eclipse.kapua.service.user.UserService;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link JobStepService} implementation
@@ -54,12 +59,16 @@ import java.util.Map;
 public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimitedService<JobStep, JobStepCreator, JobStepService, JobStepListResult, JobStepQuery, JobStepFactory>
         implements JobStepService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobStepServiceImpl.class);
+
     private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
 
     private static final AuthorizationService AUTHORIZATION_SERVICE = LOCATOR.getService(AuthorizationService.class);
     private static final PermissionFactory PERMISSION_FACTORY = LOCATOR.getFactory(PermissionFactory.class);
 
     private static final JobStepDefinitionService JOB_STEP_DEFINITION_SERVICE = LOCATOR.getService(JobStepDefinitionService.class);
+
+    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     public JobStepServiceImpl() {
         super(JobStepService.class.getName(), JobDomains.JOB_DOMAIN, JobEntityManagerFactory.getInstance(), JobStepService.class, JobStepFactory.class);
@@ -142,7 +151,7 @@ public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> JobStepDAO.create(em, jobStepCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobStepDAO.create(em, jobStepCreator)));
     }
 
     @Override
@@ -193,7 +202,7 @@ public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimited
             throw new KapuaDuplicateNameException(jobStep.getName());
         }
 
-        return entityManagerSession.doTransactedAction(em -> JobStepDAO.update(em, jobStep));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobStepDAO.update(em, jobStep)));
     }
 
     @Override
@@ -209,7 +218,7 @@ public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> JobStepDAO.find(em, scopeId, jobStepId));
+        return entityManagerSession.doAction(em -> updateAuditFields(JobStepDAO.find(em, scopeId, jobStepId)));
     }
 
     @Override
@@ -224,7 +233,11 @@ public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimited
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> JobStepDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            JobStepListResult jobStepListResult = JobStepDAO.query(em, query);
+            jobStepListResult.getItems().forEach(this::updateAuditFields);
+            return jobStepListResult;
+        });
     }
 
     @Override
@@ -287,4 +300,17 @@ public class JobStepServiceImpl extends AbstractKapuaConfigurableResourceLimited
             return deletedJobStep;
         });
     }
+
+    private JobStep updateAuditFields(JobStep jobStep) {
+        try {
+            if (jobStep != null && AUTHORIZATION_SERVICE.isPermitted(PERMISSION_FACTORY.newPermission(JobDomains.JOB_DOMAIN, Actions.info, jobStep.getScopeId()))) {
+                jobStep.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(jobStep.getCreatedBy())));
+                jobStep.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(jobStep.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return jobStep;
+    }
+
 }

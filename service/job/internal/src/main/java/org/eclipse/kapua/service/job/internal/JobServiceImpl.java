@@ -42,6 +42,8 @@ import org.eclipse.kapua.service.scheduler.trigger.TriggerFactory;
 import org.eclipse.kapua.service.scheduler.trigger.TriggerListResult;
 import org.eclipse.kapua.service.scheduler.trigger.TriggerQuery;
 import org.eclipse.kapua.service.scheduler.trigger.TriggerService;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,6 +73,9 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
     @Inject
     private TriggerFactory triggerFactory;
+
+    @Inject
+    private UserService userService;
 
     public JobServiceImpl() {
         super(JobService.class.getName(), JobDomains.JOB_DOMAIN, JobEntityManagerFactory.getInstance(), JobService.class, JobFactory.class);
@@ -104,7 +109,7 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> JobDAO.create(em, creator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobDAO.create(em, creator)));
     }
 
     @Override
@@ -141,7 +146,7 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> JobDAO.update(em, job));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(JobDAO.update(em, job)));
     }
 
     @Override
@@ -157,7 +162,7 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> JobDAO.find(em, scopeId, jobId));
+        return entityManagerSession.doAction(em -> updateAuditFields(JobDAO.find(em, scopeId, jobId)));
     }
 
     @Override
@@ -172,7 +177,11 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> JobDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            JobListResult jobListResult = JobDAO.query(em, query);
+            jobListResult.getItems().forEach(this::updateAuditFields);
+            return jobListResult;
+        });
     }
 
     @Override
@@ -268,4 +277,17 @@ public class JobServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         entityManagerSession.doTransactedAction(em -> JobDAO.delete(em, scopeId, jobId));
     }
+
+    private Job updateAuditFields(Job job) {
+        try {
+            if (job != null && authorizationService.isPermitted(permissionFactory.newPermission(JobDomains.JOB_DOMAIN, Actions.info, job.getScopeId()))) {
+                job.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(job.getCreatedBy())));
+                job.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(job.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOG.warn("Unable to resolve entity name");
+        }
+        return job;
+    }
+
 }
