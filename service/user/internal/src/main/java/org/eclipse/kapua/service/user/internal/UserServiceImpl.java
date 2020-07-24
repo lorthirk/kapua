@@ -123,8 +123,8 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create().onResultHandler(em -> UserDAO.create(em,
-                userCreator)));
+        return entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create()
+                .onResultHandler(em -> updateAuditFields(UserDAO.create(em, userCreator))));
     }
 
     @Override
@@ -180,7 +180,7 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
                     entityCache.remove(null, user);
                     return null;
                 })
-                .onResultHandler(em -> UserDAO.update(em, user)));
+                .onResultHandler(em -> updateAuditFields(UserDAO.update(em, user))));
     }
 
     @Override
@@ -212,8 +212,9 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do  delete
-        entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create().onResultHandler(em -> UserDAO.delete(em, scopeId, userId))
-                .onAfterHandler((emptyParam) -> entityCache.remove(scopeId, userId)));
+        entityManagerSession.doTransactedAction(EntityManagerContainer.<User>create()
+                .onResultHandler(em -> UserDAO.delete(em, scopeId, userId))
+                .onAfterHandler(emptyParam -> entityCache.remove(scopeId, userId)));
     }
 
     @Override
@@ -234,9 +235,10 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
         authorizationService.checkPermission(permissionFactory.newPermission(UserDomains.USER_DOMAIN, Actions.read, scopeId));
 
         // Do the find
-        return entityManagerSession.doAction(EntityManagerContainer.<User>create().onResultHandler(em -> UserDAO.find(em, scopeId, userId))
+        return entityManagerSession.doAction(EntityManagerContainer.<User>create()
                 .onBeforeHandler(() -> (User) entityCache.get(scopeId, userId))
-                .onAfterHandler((entity) -> entityCache.put(entity))
+                .onResultHandler(em -> updateAuditFields(UserDAO.find(em, scopeId, userId)))
+                .onAfterHandler(entity -> entityCache.put(entity))
         );
     }
 
@@ -250,7 +252,7 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
         // Do the find
         return entityManagerSession.doAction(EntityManagerContainer.<User>create()
                 .onBeforeHandler(() -> checkReadAccess((User) ((NamedEntityCache) entityCache).get(null, name)))
-                .onResultHandler(em -> checkReadAccess(UserDAO.findByName(em, name)))
+                .onResultHandler(em -> updateAuditFields(checkReadAccess(UserDAO.findByName(em, name))))
                 .onAfterHandler(entity -> entityCache.put(entity)));
     }
 
@@ -262,8 +264,9 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do the find
-        return entityManagerSession.doAction(EntityManagerContainer.<User>create().onResultHandler(em -> checkReadAccess(UserDAO.findByExternalId(em, externalId)))
-                .onAfterHandler((entity) -> entityCache.put(entity)));
+        return entityManagerSession.doAction(EntityManagerContainer.<User>create()
+                .onResultHandler(em -> checkReadAccess(updateAuditFields(UserDAO.findByExternalId(em, externalId))))
+                .onAfterHandler(entity -> entityCache.put(entity)));
     }
 
     @Override
@@ -279,7 +282,11 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do query
-        return entityManagerSession.doAction(EntityManagerContainer.<UserListResult>create().onResultHandler(em -> UserDAO.query(em, query)));
+        return entityManagerSession.doAction(EntityManagerContainer.<UserListResult>create().onResultHandler(em -> {
+            UserListResult userListResult = UserDAO.query(em, query);
+            userListResult.getItems().forEach(this::updateAuditFields);
+            return userListResult;
+        }));
     }
 
     @Override
@@ -354,6 +361,18 @@ public class UserServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
         for (User u : usersToDelete.getItems()) {
             delete(u.getScopeId(), u.getId());
         }
+    }
+
+    private User updateAuditFields(User user) {
+        try {
+            if (user != null && authorizationService.isPermitted(permissionFactory.newPermission(UserDomains.USER_DOMAIN, Actions.info, user.getScopeId()))) {
+                user.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> getName(user.getCreatedBy())));
+                user.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> getName(user.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return user;
     }
 
 }
