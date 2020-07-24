@@ -34,6 +34,9 @@ import org.eclipse.kapua.service.authorization.role.shiro.RoleFactoryImpl;
 import org.eclipse.kapua.service.authorization.role.shiro.RolePermissionFactoryImpl;
 import org.eclipse.kapua.service.authorization.role.shiro.RoleServiceImpl;
 import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
+import org.eclipse.kapua.service.user.internal.UserServiceImpl;
+
 import org.junit.runners.model.InitializationError;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -82,6 +85,7 @@ public class CucumberWithPropertiesForSecurity extends CucumberWithProperties {
                 bind(RolePermissionFactory.class).toInstance(new RolePermissionFactoryImpl());
                 bind(GroupService.class).toInstance(new GroupServiceImpl());
                 bind(GroupFactory.class).toInstance(new GroupFactoryImpl());
+                bind(UserService.class).toInstance(new UserServiceImpl());
             }
         };
 

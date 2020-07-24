@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2017 Eurotech and/or its affiliates and others
+ * Copyright (c) 2011, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -13,6 +13,7 @@ package org.eclipse.kapua.service.authorization.domain.shiro;
 
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.service.internal.AbstractKapuaService;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.event.ServiceEvent;
@@ -31,6 +32,8 @@ import org.eclipse.kapua.service.authorization.domain.DomainQuery;
 import org.eclipse.kapua.service.authorization.domain.DomainRegistryService;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
 import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +50,7 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
     private final KapuaLocator locator = KapuaLocator.getInstance();
     private final AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
     private final PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
+    private final UserService userService = locator.getService(UserService.class);
 
     public DomainRegistryServiceImpl() {
         super(AuthorizationEntityManagerFactory.getInstance());
@@ -63,7 +67,7 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
         // Check Access
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.DOMAIN_DOMAIN, Actions.write, null));
 
-        return entityManagerSession.doTransactedAction(em -> DomainDAO.create(em, domainCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(DomainDAO.create(em, domainCreator)));
     }
 
     @Override
@@ -92,7 +96,7 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
         // Check Access
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.DOMAIN_DOMAIN, Actions.read, KapuaId.ANY));
 
-        return entityManagerSession.doAction(em -> DomainDAO.find(em, scopeId, domainId));
+        return entityManagerSession.doAction(em -> updateAuditFields(DomainDAO.find(em, scopeId, domainId)));
     }
 
     @Override
@@ -110,7 +114,7 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
                 authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.DOMAIN_DOMAIN, Actions.read, KapuaId.ANY));
             }
 
-            return domain;
+            return updateAuditFields(domain);
         });
     }
 
@@ -123,7 +127,11 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
         // Check Access
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.DOMAIN_DOMAIN, Actions.read, KapuaId.ANY));
 
-        return entityManagerSession.doAction(em -> DomainDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            DomainListResult domainListResult = DomainDAO.query(em, query);
+            domainListResult.getItems().forEach(this::updateAuditFields);
+            return domainListResult;
+        });
     }
 
     @Override
@@ -159,5 +167,16 @@ public class DomainRegistryServiceImpl extends AbstractKapuaService implements D
         for (Domain d : domainsToDelete.getItems()) {
             delete(d.getScopeId(), d.getId());
         }
+    }
+
+    private Domain updateAuditFields(Domain domain) {
+        try {
+            if (domain != null && authorizationService.isPermitted(permissionFactory.newPermission(AuthorizationDomains.DOMAIN_DOMAIN, Actions.info, domain.getScopeId()))) {
+                domain.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(domain.getCreatedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return domain;
     }
 }

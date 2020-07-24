@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2016, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -15,10 +15,12 @@ import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaEntityUniquenessException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.commons.jpa.EntityManagerContainer;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.service.internal.AbstractKapuaService;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
+import org.eclipse.kapua.model.KapuaEntityAttributes;
 import org.eclipse.kapua.model.domain.Actions;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.KapuaQuery;
@@ -35,11 +37,15 @@ import org.eclipse.kapua.service.authorization.permission.Permission;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
 import org.eclipse.kapua.service.authorization.permission.shiro.PermissionValidator;
 import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link AccessPermission} service implementation.
@@ -48,6 +54,13 @@ import java.util.Map;
  */
 @KapuaProvider
 public class AccessPermissionServiceImpl extends AbstractKapuaService implements AccessPermissionService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccessPermissionServiceImpl.class);
+
+    private final KapuaLocator locator = KapuaLocator.getInstance();
+    private final AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
+    private final PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
+    private final UserService userService = locator.getService(UserService.class);
 
     public AccessPermissionServiceImpl() {
         super(AuthorizationEntityManagerFactory.getInstance(), AccessPermissionCacheFactory.getInstance());
@@ -64,9 +77,6 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.write, accessPermissionCreator.getScopeId()));
 
         //
@@ -83,7 +93,7 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
         AccessPermissionQuery query = new AccessPermissionQueryImpl(accessPermissionCreator.getScopeId());
         query.setPredicate(
                 query.andPredicate(
-                        query.attributePredicate(AccessPermissionAttributes.SCOPE_ID, accessPermissionCreator.getScopeId()),
+                        query.attributePredicate(KapuaEntityAttributes.SCOPE_ID, accessPermissionCreator.getScopeId()),
                         query.attributePredicate(AccessPermissionAttributes.ACCESS_INFO_ID, accessPermissionCreator.getAccessInfoId()),
                         query.attributePredicate(AccessPermissionAttributes.PERMISSION_DOMAIN, accessPermissionCreator.getPermission().getDomain()),
                         query.attributePredicate(AccessPermissionAttributes.PERMISSION_ACTION, accessPermissionCreator.getPermission().getAction()),
@@ -95,7 +105,7 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
         if (count(query) > 0) {
             List<Map.Entry<String, Object>> uniquesFieldValues = new ArrayList<>();
 
-            uniquesFieldValues.add(new AbstractMap.SimpleEntry<>(AccessPermissionAttributes.SCOPE_ID, accessPermissionCreator.getScopeId()));
+            uniquesFieldValues.add(new AbstractMap.SimpleEntry<>(KapuaEntityAttributes.SCOPE_ID, accessPermissionCreator.getScopeId()));
             uniquesFieldValues.add(new AbstractMap.SimpleEntry<>(AccessPermissionAttributes.ACCESS_INFO_ID, accessPermissionCreator.getAccessInfoId()));
             uniquesFieldValues.add(new AbstractMap.SimpleEntry<>(AccessPermissionAttributes.PERMISSION_DOMAIN, accessPermissionCreator.getPermission().getDomain()));
             uniquesFieldValues.add(new AbstractMap.SimpleEntry<>(AccessPermissionAttributes.PERMISSION_ACTION, accessPermissionCreator.getPermission().getAction()));
@@ -108,17 +118,19 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(EntityManagerContainer.<AccessPermission>create().onResultHandler(em -> {
-            //
-            // Check that accessInfo exists
-            AccessInfo accessInfo = AccessInfoDAO.find(em, accessPermissionCreator.getScopeId(), accessPermissionCreator.getAccessInfoId());
+        return entityManagerSession.doTransactedAction(EntityManagerContainer.<AccessPermission>create()
+            .onResultHandler(em -> {
+                //
+                // Check that accessInfo exists
+                AccessInfo accessInfo = AccessInfoDAO.find(em, accessPermissionCreator.getScopeId(), accessPermissionCreator.getAccessInfoId());
 
-            if (accessInfo == null) {
-                throw new KapuaEntityNotFoundException(AccessInfo.TYPE, accessPermissionCreator.getAccessInfoId());
-            }
+                if (accessInfo == null) {
+                    throw new KapuaEntityNotFoundException(AccessInfo.TYPE, accessPermissionCreator.getAccessInfoId());
+                }
 
-            return AccessPermissionDAO.create(em, accessPermissionCreator);
-        }).onAfterHandler((entity) -> entityCache.removeList(entity.getScopeId(), entity.getAccessInfoId())));
+                return updateAuditFields(AccessPermissionDAO.create(em, accessPermissionCreator));
+            })
+            .onAfterHandler(entity -> entityCache.removeList(entity.getScopeId(), entity.getAccessInfoId())));
     }
 
     @Override
@@ -127,9 +139,6 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
         ArgumentValidator.notNull(accessPermissionId, "accessPermissionId");
 
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.delete, scopeId));
 
         entityManagerSession.doTransactedAction(EntityManagerContainer.<AccessPermission>create().onResultHandler(em -> {
@@ -141,7 +150,7 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
             }
 
             return AccessPermissionDAO.delete(em, scopeId, accessPermissionId);
-        }).onAfterHandler((entity) -> {
+        }).onAfterHandler(entity -> {
             entityCache.remove(scopeId, accessPermissionId);
             entityCache.removeList(scopeId, entity.getAccessInfoId());
         }));
@@ -155,14 +164,12 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.read, scopeId));
 
-        return entityManagerSession.doAction(EntityManagerContainer.<AccessPermission>create().onResultHandler(em -> AccessPermissionDAO.find(em, scopeId, accessPermissionId))
+        return entityManagerSession.doAction(EntityManagerContainer.<AccessPermission>create()
                 .onBeforeHandler(() -> (AccessPermission) entityCache.get(scopeId, accessPermissionId))
-                .onAfterHandler((entity) -> entityCache.put(entity)));
+                .onResultHandler(em -> updateAuditFields(AccessPermissionDAO.find(em, scopeId, accessPermissionId)))
+                .onAfterHandler(entity -> entityCache.put(entity)));
     }
 
     @Override
@@ -173,9 +180,6 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN,
                 Actions.read, scopeId));
 
@@ -201,12 +205,13 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.read, query.getScopeId()));
 
-        return entityManagerSession.doAction(EntityManagerContainer.<AccessPermissionListResult>create().onResultHandler(em -> AccessPermissionDAO.query(em, query)));
+        return entityManagerSession.doAction(EntityManagerContainer.<AccessPermissionListResult>create().onResultHandler(em -> {
+            AccessPermissionListResult accessPermissionListResult = AccessPermissionDAO.query(em, query);
+            accessPermissionListResult.getItems().forEach(this::updateAuditFields);
+            return accessPermissionListResult;
+        }));
     }
 
     @Override
@@ -216,11 +221,20 @@ public class AccessPermissionServiceImpl extends AbstractKapuaService implements
 
         //
         // Check Access
-        KapuaLocator locator = KapuaLocator.getInstance();
-        AuthorizationService authorizationService = locator.getService(AuthorizationService.class);
-        PermissionFactory permissionFactory = locator.getFactory(PermissionFactory.class);
         authorizationService.checkPermission(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.read, query.getScopeId()));
 
         return entityManagerSession.doAction(EntityManagerContainer.<Long>create().onResultHandler(em -> AccessPermissionDAO.count(em, query)));
     }
+
+    private AccessPermission updateAuditFields(AccessPermission accessPermission) {
+        try {
+            if (accessPermission != null && authorizationService.isPermitted(permissionFactory.newPermission(AuthorizationDomains.ACCESS_INFO_DOMAIN, Actions.info, accessPermission.getScopeId()))) {
+                accessPermission.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(accessPermission.getCreatedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return accessPermission;
+    }
+
 }

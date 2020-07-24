@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2016, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -18,9 +18,9 @@ import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.KapuaMaxNumberOfItemsReachedException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
 import org.eclipse.kapua.commons.jpa.EntityManagerContainer;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.event.ServiceEvent;
-import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.model.domain.Actions;
 import org.eclipse.kapua.model.id.KapuaId;
@@ -41,6 +41,8 @@ import org.eclipse.kapua.service.authorization.role.RolePermissionFactory;
 import org.eclipse.kapua.service.authorization.role.RoleQuery;
 import org.eclipse.kapua.service.authorization.role.RoleService;
 import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,14 +58,17 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
     private static final Logger LOG = LoggerFactory.getLogger(RoleServiceImpl.class);
 
-    private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
-
     @Inject
     private AuthorizationService authorizationService;
+
     @Inject
     private PermissionFactory permissionFactory;
+
     @Inject
     private RolePermissionFactory rolePermissionFactory;
+
+    @Inject
+    private UserService userService;
 
     public RoleServiceImpl() {
         super(RoleService.class.getName(), AuthorizationDomains.ROLE_DOMAIN,
@@ -129,7 +134,7 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
                 }
             }
 
-            return role;
+            return updateAuditFields(role);
         }));
     }
 
@@ -168,11 +173,12 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(EntityManagerContainer.<Role>create().onResultHandler(em -> RoleDAO.update(em, role))
+        return entityManagerSession.doTransactedAction(EntityManagerContainer.<Role>create()
                 .onBeforeHandler(() -> {
                     entityCache.remove(null, role);
                     return null;
-                }));
+                })
+                .onResultHandler(em -> updateAuditFields(RoleDAO.update(em, role))));
     }
 
     @Override
@@ -214,9 +220,10 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do find
-        return entityManagerSession.doAction(EntityManagerContainer.<Role>create().onResultHandler(em -> RoleDAO.find(em, scopeId, roleId))
+        return entityManagerSession.doAction(EntityManagerContainer.<Role>create()
                 .onBeforeHandler(() -> (Role) entityCache.get(scopeId, roleId))
-                .onAfterHandler((entity) -> entityCache.put(entity)));
+                .onResultHandler(em -> updateAuditFields(RoleDAO.find(em, scopeId, roleId)))
+                .onAfterHandler(entity -> entityCache.put(entity)));
     }
 
     @Override
@@ -231,7 +238,11 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
 
         //
         // Do query
-        return entityManagerSession.doAction(EntityManagerContainer.<RoleListResult>create().onResultHandler(em -> RoleDAO.query(em, query)));
+        return entityManagerSession.doAction(EntityManagerContainer.<RoleListResult>create().onResultHandler(em -> {
+            RoleListResult roleListResult = RoleDAO.query(em, query);
+            roleListResult.getItems().forEach(this::updateAuditFields);
+            return roleListResult;
+        }));
     }
 
     @Override
@@ -271,4 +282,17 @@ public class RoleServiceImpl extends AbstractKapuaConfigurableResourceLimitedSer
             delete(r.getScopeId(), r.getId());
         }
     }
+
+    private Role updateAuditFields(Role role) {
+        try {
+            if (role != null && authorizationService.isPermitted(permissionFactory.newPermission(AuthorizationDomains.ROLE_DOMAIN, Actions.info, role.getScopeId()))) {
+                role.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(role.getCreatedBy())));
+                role.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(role.getCreatedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOG.warn("Unable to resolve entity name");
+        }
+        return role;
+    }
+
 }

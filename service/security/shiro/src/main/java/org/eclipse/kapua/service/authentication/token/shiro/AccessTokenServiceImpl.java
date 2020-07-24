@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2016, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -13,6 +13,7 @@ package org.eclipse.kapua.service.authentication.token.shiro;
 
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.service.internal.AbstractKapuaService;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.event.ServiceEvent;
@@ -30,6 +31,8 @@ import org.eclipse.kapua.service.authentication.token.AccessTokenQuery;
 import org.eclipse.kapua.service.authentication.token.AccessTokenService;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +52,8 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
     private static final AuthorizationService AUTHORIZATION_SERVICE = LOCATOR.getService(AuthorizationService.class);
     private static final PermissionFactory PERMISSION_FACTORY = LOCATOR.getFactory(PermissionFactory.class);
+
+    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     /**
      * Constructor
@@ -73,7 +78,7 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> AccessTokenDAO.create(em, accessTokenCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(AccessTokenDAO.create(em, accessTokenCreator)));
     }
 
     @Override
@@ -98,7 +103,7 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> AccessTokenDAO.update(em, accessToken));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(AccessTokenDAO.update(em, accessToken)));
     }
 
     @Override
@@ -114,7 +119,7 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> AccessTokenDAO.find(em, scopeId, accessTokenId));
+        return entityManagerSession.doAction(em -> updateAuditFields(AccessTokenDAO.find(em, scopeId, accessTokenId)));
     }
 
     @Override
@@ -129,7 +134,11 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> AccessTokenDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            AccessTokenListResult accessTokenListResult = AccessTokenDAO.query(em, query);
+            accessTokenListResult.getItems().forEach(this::updateAuditFields);
+            return accessTokenListResult;
+        });
     }
 
     @Override
@@ -198,7 +207,7 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
 
         //
         // Do find
-        AccessToken accessToken = entityManagerSession.doAction(em -> AccessTokenDAO.findByTokenId(em, tokenId));
+        AccessToken accessToken = entityManagerSession.doAction(em -> updateAuditFields(AccessTokenDAO.findByTokenId(em, tokenId)));
 
         //
         // Check Access
@@ -271,4 +280,17 @@ public class AccessTokenServiceImpl extends AbstractKapuaService implements Acce
             delete(at.getScopeId(), at.getId());
         }
     }
+
+    private AccessToken updateAuditFields(AccessToken accessToken) {
+        try {
+            if (accessToken != null && AUTHORIZATION_SERVICE.isPermitted(PERMISSION_FACTORY.newPermission(AuthenticationDomains.ACCESS_TOKEN_DOMAIN, Actions.info, accessToken.getScopeId()))) {
+                accessToken.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(accessToken.getCreatedBy())));
+                accessToken.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> USER_SERVICE.getName(accessToken.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return accessToken;
+    }
+
 }

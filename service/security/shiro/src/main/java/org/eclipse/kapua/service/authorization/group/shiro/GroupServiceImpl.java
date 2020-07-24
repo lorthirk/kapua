@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2016, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,15 +11,19 @@
  *******************************************************************************/
 package org.eclipse.kapua.service.authorization.group.shiro;
 
+import javax.inject.Inject;
+
 import org.eclipse.kapua.KapuaDuplicateNameException;
 import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.KapuaMaxNumberOfItemsReachedException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.event.ServiceEvent;
-import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.locator.KapuaProvider;
+import org.eclipse.kapua.model.KapuaEntityAttributes;
+import org.eclipse.kapua.model.KapuaNamedEntityAttributes;
 import org.eclipse.kapua.model.domain.Actions;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.KapuaQuery;
@@ -27,7 +31,6 @@ import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
 import org.eclipse.kapua.service.authorization.AuthorizationDomains;
 import org.eclipse.kapua.service.authorization.AuthorizationService;
 import org.eclipse.kapua.service.authorization.group.Group;
-import org.eclipse.kapua.service.authorization.group.GroupAttributes;
 import org.eclipse.kapua.service.authorization.group.GroupCreator;
 import org.eclipse.kapua.service.authorization.group.GroupFactory;
 import org.eclipse.kapua.service.authorization.group.GroupListResult;
@@ -35,10 +38,10 @@ import org.eclipse.kapua.service.authorization.group.GroupQuery;
 import org.eclipse.kapua.service.authorization.group.GroupService;
 import org.eclipse.kapua.service.authorization.permission.PermissionFactory;
 import org.eclipse.kapua.service.authorization.shiro.AuthorizationEntityManagerFactory;
+import org.eclipse.kapua.service.user.UserService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.inject.Inject;
 
 /**
  * {@link GroupService} implementation.
@@ -50,11 +53,14 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
 
     private static final Logger LOG = LoggerFactory.getLogger(GroupServiceImpl.class);
 
-    private static final KapuaLocator LOCATOR = KapuaLocator.getInstance();
     @Inject
     private AuthorizationService authorizationService;
+
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserService userService;
 
     public GroupServiceImpl() {
         super(GroupService.class.getName(), AuthorizationDomains.GROUP_DOMAIN, AuthorizationEntityManagerFactory.getInstance(), GroupService.class, GroupFactory.class);
@@ -81,7 +87,7 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
         //
         // Check duplicate name
         GroupQuery query = new GroupQueryImpl(groupCreator.getScopeId());
-        query.setPredicate(query.attributePredicate(GroupAttributes.NAME, groupCreator.getName()));
+        query.setPredicate(query.attributePredicate(KapuaNamedEntityAttributes.NAME, groupCreator.getName()));
 
         if (count(query) > 0) {
             throw new KapuaDuplicateNameException(groupCreator.getName());
@@ -89,7 +95,7 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> GroupDAO.create(em, groupCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(GroupDAO.create(em, groupCreator)));
     }
 
     @Override
@@ -116,8 +122,8 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
         GroupQuery query = new GroupQueryImpl(group.getScopeId());
         query.setPredicate(
                 query.andPredicate(
-                        query.attributePredicate(GroupAttributes.NAME, group.getName()),
-                        query.attributePredicate(GroupAttributes.ENTITY_ID, group.getId(), Operator.NOT_EQUAL)
+                        query.attributePredicate(KapuaNamedEntityAttributes.NAME, group.getName()),
+                        query.attributePredicate(KapuaEntityAttributes.ENTITY_ID, group.getId(), Operator.NOT_EQUAL)
                 )
         );
 
@@ -127,7 +133,7 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
 
         //
         // Do update
-        return entityManagerSession.doTransactedAction(em -> GroupDAO.update(em, group));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(GroupDAO.update(em, group)));
     }
 
     @Override
@@ -149,7 +155,7 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
 
         //
         // Do delete
-        entityManagerSession.doTransactedAction(em -> GroupDAO.delete(em, scopeId, groupId));
+        entityManagerSession.doTransactedAction(em -> updateAuditFields(GroupDAO.delete(em, scopeId, groupId)));
     }
 
     @Override
@@ -180,7 +186,11 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> GroupDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            GroupListResult groupListResult = GroupDAO.query(em, query);
+            groupListResult.getItems().forEach(this::updateAuditFields);
+            return groupListResult;
+        });
     }
 
     @Override
@@ -219,4 +229,17 @@ public class GroupServiceImpl extends AbstractKapuaConfigurableResourceLimitedSe
             delete(g.getScopeId(), g.getId());
         }
     }
+
+    private Group updateAuditFields(Group group) {
+        try {
+            if (group != null && authorizationService.isPermitted(permissionFactory.newPermission(AuthorizationDomains.GROUP_DOMAIN, Actions.info, group.getScopeId()))) {
+                group.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(group.getCreatedBy())));
+                group.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(group.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOG.warn("Unable to resolve entity name");
+        }
+        return group;
+    }
+
 }
