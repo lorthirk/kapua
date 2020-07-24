@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -16,6 +16,7 @@ import org.eclipse.kapua.KapuaEntityNotFoundException;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.KapuaMaxNumberOfItemsReachedException;
 import org.eclipse.kapua.commons.configuration.AbstractKapuaConfigurableResourceLimitedService;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.commons.util.ArgumentValidator;
 import org.eclipse.kapua.locator.KapuaProvider;
 import org.eclipse.kapua.model.domain.Actions;
@@ -32,10 +33,12 @@ import org.eclipse.kapua.service.tag.TagFactory;
 import org.eclipse.kapua.service.tag.TagListResult;
 import org.eclipse.kapua.service.tag.TagQuery;
 import org.eclipse.kapua.service.tag.TagService;
+import org.eclipse.kapua.service.user.UserService;
 
 import javax.inject.Inject;
 
-//import org.eclipse.kapua.locator.KapuaLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link TagService} implementation.
@@ -45,11 +48,16 @@ import javax.inject.Inject;
 @KapuaProvider
 public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedService<Tag, TagCreator, TagService, TagListResult, TagQuery, TagFactory> implements TagService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TagServiceImpl.class);
+
     @Inject
     private AuthorizationService authorizationService;
 
     @Inject
     private PermissionFactory permissionFactory;
+
+    @Inject
+    private UserService userService;
 
     public TagServiceImpl() {
         super(TagService.class.getName(), TagDomains.TAG_DOMAIN, TagEntityManagerFactory.getInstance(), TagService.class, TagFactory.class);
@@ -84,7 +92,7 @@ public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do create
-        return entityManagerSession.doTransactedAction(em -> TagDAO.create(em, tagCreator));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(TagDAO.create(em, tagCreator)));
     }
 
     @Override
@@ -122,7 +130,7 @@ public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do Update
-        return entityManagerSession.doTransactedAction(em -> TagDAO.update(em, tag));
+        return entityManagerSession.doTransactedAction(em -> updateAuditFields(TagDAO.update(em, tag)));
     }
 
     @Override
@@ -160,7 +168,7 @@ public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do find
-        return entityManagerSession.doAction(em -> TagDAO.find(em, scopeId, tagId));
+        return entityManagerSession.doAction(em -> updateAuditFields(TagDAO.find(em, scopeId, tagId)));
     }
 
     @Override
@@ -175,7 +183,11 @@ public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
 
         //
         // Do query
-        return entityManagerSession.doAction(em -> TagDAO.query(em, query));
+        return entityManagerSession.doAction(em -> {
+            TagListResult tagListResult = TagDAO.query(em, query);
+            tagListResult.getItems().forEach(this::updateAuditFields);
+            return tagListResult;
+        });
     }
 
     @Override
@@ -192,4 +204,17 @@ public class TagServiceImpl extends AbstractKapuaConfigurableResourceLimitedServ
         // Do count
         return entityManagerSession.doAction(em -> TagDAO.count(em, query));
     }
+
+    private Tag updateAuditFields(Tag tag) {
+        try {
+            if (tag != null && authorizationService.isPermitted(permissionFactory.newPermission(TagDomains.TAG_DOMAIN, Actions.info, tag.getScopeId()))) {
+                tag.setCreatedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(tag.getCreatedBy())));
+                tag.setModifiedByName(KapuaSecurityUtils.doPrivileged(() -> userService.getName(tag.getModifiedBy())));
+            }
+        } catch (KapuaException ex) {
+            LOGGER.warn("Unable to resolve entity name");
+        }
+        return tag;
+    }
+
 }
