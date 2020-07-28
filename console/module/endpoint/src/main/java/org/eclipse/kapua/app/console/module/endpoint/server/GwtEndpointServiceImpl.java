@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2018, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -29,7 +29,6 @@ import org.eclipse.kapua.app.console.module.endpoint.shared.service.GwtEndpointS
 import org.eclipse.kapua.app.console.module.endpoint.shared.util.GwtKapuaEndpointModelConverter;
 import org.eclipse.kapua.app.console.module.endpoint.shared.util.KapuaGwtEndpointModelConverter;
 import org.eclipse.kapua.commons.model.id.KapuaEid;
-import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
 import org.eclipse.kapua.locator.KapuaLocator;
 import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.service.endpoint.EndpointInfo;
@@ -39,16 +38,9 @@ import org.eclipse.kapua.service.endpoint.EndpointInfoListResult;
 import org.eclipse.kapua.service.endpoint.EndpointInfoQuery;
 import org.eclipse.kapua.service.endpoint.EndpointInfoService;
 import org.eclipse.kapua.service.endpoint.EndpointUsage;
-import org.eclipse.kapua.service.user.User;
-import org.eclipse.kapua.service.user.UserFactory;
-import org.eclipse.kapua.service.user.UserListResult;
-import org.eclipse.kapua.service.user.UserService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 public class GwtEndpointServiceImpl extends KapuaRemoteServiceServlet implements GwtEndpointService {
 
@@ -58,9 +50,6 @@ public class GwtEndpointServiceImpl extends KapuaRemoteServiceServlet implements
 
     private static final EndpointInfoService ENDPOINT_INFO_SERVICE = LOCATOR.getService(EndpointInfoService.class);
     private static final EndpointInfoFactory ENDPOINT_INFO_FACTORY = LOCATOR.getFactory(EndpointInfoFactory.class);
-
-    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
-    private static final UserFactory USER_FACTORY = LOCATOR.getFactory(UserFactory.class);
 
     @Override
     public GwtEndpoint create(GwtEndpointCreator gwtEndpointCreator) throws GwtKapuaException {
@@ -137,24 +126,8 @@ public class GwtEndpointServiceImpl extends KapuaRemoteServiceServlet implements
             totalLength = endpoints.getTotalCount().intValue();
 
             if (!endpoints.isEmpty()) {
-                UserListResult userListResult = KapuaSecurityUtils.doPrivileged(new Callable<UserListResult>() {
-
-                    @Override
-                    public UserListResult call() throws Exception {
-                        return USER_SERVICE.query(USER_FACTORY.newQuery(null));
-                    }
-                });
-
-                Map<String, String> usernameMap = new HashMap<String, String>();
-                for (User user : userListResult.getItems()) {
-                    usernameMap.put(user.getId().toCompactId(), user.getName());
-                }
-
                 for (EndpointInfo ei : endpoints.getItems()) {
-                    GwtEndpoint gwtEndpoint = KapuaGwtEndpointModelConverter.convertEndpoint(ei);
-                    gwtEndpoint.setCreatedByName(ei.getCreatedBy() != null ? usernameMap.get(ei.getCreatedBy().toCompactId()) : null);
-                    gwtEndpoint.setModifiedByName(ei.getModifiedBy() != null ? usernameMap.get(ei.getModifiedBy().toCompactId()) : null);
-                    gwtEndpointList.add(gwtEndpoint);
+                    gwtEndpointList.add(KapuaGwtEndpointModelConverter.convertEndpoint(ei));
                 }
             }
         } catch (Exception e) {
@@ -188,19 +161,6 @@ public class GwtEndpointServiceImpl extends KapuaRemoteServiceServlet implements
             final EndpointInfo endpointInfo = ENDPOINT_INFO_SERVICE.find(scopeId, endpointId);
 
             if (endpointInfo != null) {
-                UserListResult userListResult = KapuaSecurityUtils.doPrivileged(new Callable<UserListResult>() {
-
-                    @Override
-                    public UserListResult call() throws Exception {
-                        return USER_SERVICE.query(USER_FACTORY.newQuery(null));
-                    }
-                });
-
-                Map<String, String> usernameMap = new HashMap<String, String>();
-                for (User user : userListResult.getItems()) {
-                    usernameMap.put(user.getId().toCompactId(), user.getName());
-                }
-
                 gwtEndpointDescription.add(new GwtGroupedNVPair("endpointInfo", "endpointSchema", endpointInfo.getSchema()));
                 gwtEndpointDescription.add(new GwtGroupedNVPair("endpointInfo", "endpointDns", endpointInfo.getDns()));
                 gwtEndpointDescription.add(new GwtGroupedNVPair("endpointInfo", "endpointPort", endpointInfo.getPort()));
@@ -214,10 +174,10 @@ public class GwtEndpointServiceImpl extends KapuaRemoteServiceServlet implements
 
                 gwtEndpointDescription.add(new GwtGroupedNVPair("entityInfo", "endpointModifiedOn", endpointInfo.getModifiedOn()));
                 gwtEndpointDescription.add(new GwtGroupedNVPair("entityInfo", "endpointModifiedBy",
-                        endpointInfo.getModifiedBy() != null ? usernameMap.get(endpointInfo.getModifiedBy().toCompactId()) : null));
+                        endpointInfo.getModifiedByName()));
                 gwtEndpointDescription.add(new GwtGroupedNVPair("entityInfo", "endpointCreatedOn", endpointInfo.getCreatedOn()));
                 gwtEndpointDescription.add(new GwtGroupedNVPair("entityInfo", "endpointCreatedBy",
-                        endpointInfo.getCreatedBy() != null ? usernameMap.get(endpointInfo.getCreatedBy().toCompactId()) : null));
+                        endpointInfo.getCreatedByName()));
 
             }
         } catch (Exception e) {

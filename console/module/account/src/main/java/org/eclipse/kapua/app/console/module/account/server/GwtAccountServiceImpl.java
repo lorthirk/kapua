@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2019 Eurotech and/or its affiliates and others
+ * Copyright (c) 2017, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -69,10 +69,6 @@ import org.eclipse.kapua.service.endpoint.EndpointInfoDomain;
 import org.eclipse.kapua.service.endpoint.EndpointInfoFactory;
 import org.eclipse.kapua.service.endpoint.EndpointInfoListResult;
 import org.eclipse.kapua.service.endpoint.EndpointInfoService;
-import org.eclipse.kapua.service.user.User;
-import org.eclipse.kapua.service.user.UserFactory;
-import org.eclipse.kapua.service.user.UserListResult;
-import org.eclipse.kapua.service.user.UserService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,9 +114,6 @@ public class GwtAccountServiceImpl extends KapuaRemoteServiceServlet implements 
 
     private static final RoleService ROLE_SERVICE = LOCATOR.getService(RoleService.class);
     private static final RoleFactory ROLE_FACTORY = LOCATOR.getFactory(RoleFactory.class);
-
-    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
-    private static final UserFactory USER_FACTORY = LOCATOR.getFactory(UserFactory.class);
 
     @Override
     public GwtAccount create(GwtXSRFToken xsrfToken, GwtAccountCreator gwtAccountCreator)
@@ -211,28 +204,14 @@ public class GwtAccountServiceImpl extends KapuaRemoteServiceServlet implements 
         List<GwtGroupedNVPair> accountPropertiesPairs = new ArrayList<GwtGroupedNVPair>();
         try {
             final Account account = ACCOUNT_SERVICE.find(scopeId, accountId);
-
-            UserListResult userListResult = KapuaSecurityUtils.doPrivileged(new Callable<UserListResult>() {
-
-                @Override
-                public UserListResult call() throws Exception {
-                    return USER_SERVICE.query(USER_FACTORY.newQuery(null));
-                }
-            });
-
-            Map<String, String> usernameMap = new HashMap<String, String>();
-            for (User user : userListResult.getItems()) {
-                usernameMap.put(user.getId().toCompactId(), user.getName());
-            }
-
             final String entityInfo = "entityInfo";
             accountPropertiesPairs.add(new GwtGroupedNVPair(entityInfo, "expirationDate", account.getExpirationDate()));
             accountPropertiesPairs.add(new GwtGroupedNVPair(entityInfo, "accountCreatedOn", account.getCreatedOn()));
             accountPropertiesPairs.add(new GwtGroupedNVPair(entityInfo, "accountCreatedBy",
-                    account.getCreatedBy() != null ? usernameMap.get(account.getCreatedBy().toCompactId()) : null));
+                    account.getCreatedByName()));
             accountPropertiesPairs.add(new GwtGroupedNVPair(entityInfo, "accountModifiedOn", account.getModifiedOn()));
             accountPropertiesPairs.add(new GwtGroupedNVPair(entityInfo, "accountModifiedBy",
-                    account.getModifiedBy() != null ? usernameMap.get(account.getModifiedBy().toCompactId()) : null));
+                    account.getModifiedByName()));
 
             if (account.getScopeId() != null) {
                 Account parentAccount = KapuaSecurityUtils.doPrivileged(new Callable<Account>() {
@@ -686,23 +665,8 @@ public class GwtAccountServiceImpl extends KapuaRemoteServiceServlet implements 
             totalLength = accounts.getTotalCount().intValue();
 
             if (!accounts.isEmpty()) {
-                UserListResult usernames = KapuaSecurityUtils.doPrivileged(new Callable<UserListResult>() {
-
-                    @Override
-                    public UserListResult call() throws Exception {
-                        return USER_SERVICE.query(USER_FACTORY.newQuery(null));
-                    }
-                });
-
-                Map<String, String> usernameMap = new HashMap<String, String>();
-                for (User user : usernames.getItems()) {
-                    usernameMap.put(user.getId().toCompactId(), user.getName());
-                }
-
                 for (Account a : accounts.getItems()) {
-                    GwtAccount gwtAccount = KapuaGwtAccountModelConverter.convertAccount(a);
-                    gwtAccount.setModifiedByName(usernameMap.get(gwtAccount.getCreatedBy()));
-                    gwtAccounts.add(gwtAccount);
+                    gwtAccounts.add(KapuaGwtAccountModelConverter.convertAccount(a));
                 }
             }
         } catch (Throwable t) {

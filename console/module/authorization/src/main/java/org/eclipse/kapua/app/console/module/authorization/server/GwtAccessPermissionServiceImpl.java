@@ -45,8 +45,6 @@ import org.eclipse.kapua.service.authorization.access.AccessPermissionQuery;
 import org.eclipse.kapua.service.authorization.access.AccessPermissionService;
 import org.eclipse.kapua.service.authorization.group.Group;
 import org.eclipse.kapua.service.authorization.group.GroupService;
-import org.eclipse.kapua.service.user.User;
-import org.eclipse.kapua.service.user.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +62,6 @@ public class GwtAccessPermissionServiceImpl extends KapuaRemoteServiceServlet im
     private static final AccessPermissionFactory ACCESS_PERMISSION_FACTORY = LOCATOR.getFactory(AccessPermissionFactory.class);
 
     private static final AccountService ACCOUNT_SERVICE = LOCATOR.getService(AccountService.class);
-    private static final UserService USER_SERVICE = LOCATOR.getService(UserService.class);
 
     @Override
     public GwtAccessPermission create(GwtXSRFToken xsrfToken, GwtAccessPermissionCreator gwtAccessPermissionCreator) throws GwtKapuaException {
@@ -142,26 +139,16 @@ public class GwtAccessPermissionServiceImpl extends KapuaRemoteServiceServlet im
 
                     String sortField = StringUtils.isEmpty(loadConfig.getSortField()) ? KapuaEntityAttributes.CREATED_ON : loadConfig.getSortField();
                     if (sortField.equals("createdOnFormatted")) {
-                        sortField = AccessPermissionAttributes.CREATED_ON;
+                        sortField = KapuaEntityAttributes.CREATED_ON;
                     }
                     SortOrder sortOrder = loadConfig.getSortDir().equals(SortDir.DESC) ? SortOrder.DESCENDING : SortOrder.ASCENDING;
                     FieldSortCriteria sortCriteria = query.fieldSortCriteria(sortField, sortOrder);
                     query.setAskTotalCount(true);
                     query.setSortCriteria(sortCriteria);
-
                     AccessPermissionListResult accessPermissionList = ACCESS_PERMISSION_SERVICE.query(query);
                     totalLength = accessPermissionList.getTotalCount().intValue();
-
                     if (!accessPermissionList.isEmpty()) {
                         for (final AccessPermission accessPermission : accessPermissionList.getItems()) {
-                            User createdByUser = KapuaSecurityUtils.doPrivileged(new Callable<User>() {
-
-                                @Override
-                                public User call() throws Exception {
-                                    return USER_SERVICE.find(accessPermission.getScopeId(), accessPermission.getCreatedBy());
-                                }
-                            });
-
                             Account targetScopeIdAccount = null;
                             if (accessPermission.getPermission().getTargetScopeId() != null) {
                                 targetScopeIdAccount = KapuaSecurityUtils.doPrivileged(new Callable<Account>() {
@@ -172,7 +159,6 @@ public class GwtAccessPermissionServiceImpl extends KapuaRemoteServiceServlet im
                                     }
                                 });
                             }
-
                             GwtAccessPermission gwtAccessPermission = KapuaGwtAuthorizationModelConverter.convertAccessPermission(accessPermission);
                             if (accessPermission.getPermission().getGroupId() != null) {
                                 Group group = groupService.find(scopeId, accessPermission.getPermission().getGroupId());
@@ -183,10 +169,7 @@ public class GwtAccessPermissionServiceImpl extends KapuaRemoteServiceServlet im
                             } else {
                                 gwtAccessPermission.setGroupName("ALL");
                             }
-
-                            gwtAccessPermission.setCreatedByName(createdByUser != null ? createdByUser.getName() : null);
                             gwtAccessPermission.setPermissionTargetScopeIdByName(targetScopeIdAccount != null ? targetScopeIdAccount.getName() : null);
-
                             gwtAccessPermissions.add(gwtAccessPermission);
                         }
                     }

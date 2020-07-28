@@ -11,11 +11,9 @@
  *******************************************************************************/
 package org.eclipse.kapua.app.console.module.authorization.server;
 
-import com.extjs.gxt.ui.client.Style.SortDir;
-import com.extjs.gxt.ui.client.data.BasePagingLoadResult;
-import com.extjs.gxt.ui.client.data.PagingLoadConfig;
-import com.extjs.gxt.ui.client.data.PagingLoadResult;
-import org.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.kapua.app.console.module.api.client.GwtKapuaException;
 import org.eclipse.kapua.app.console.module.api.server.KapuaRemoteServiceServlet;
 import org.eclipse.kapua.app.console.module.api.server.util.KapuaExceptionHandler;
@@ -26,16 +24,15 @@ import org.eclipse.kapua.app.console.module.authorization.shared.model.GwtAccess
 import org.eclipse.kapua.app.console.module.authorization.shared.service.GwtAccessRoleService;
 import org.eclipse.kapua.app.console.module.authorization.shared.util.GwtKapuaAuthorizationModelConverter;
 import org.eclipse.kapua.app.console.module.authorization.shared.util.KapuaGwtAuthorizationModelConverter;
+import org.eclipse.kapua.locator.KapuaLocator;
+import org.eclipse.kapua.model.KapuaEntityAttributes;
+import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.model.query.FieldSortCriteria;
 import org.eclipse.kapua.model.query.SortOrder;
-import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
-import org.eclipse.kapua.locator.KapuaLocator;
-import org.eclipse.kapua.model.id.KapuaId;
 import org.eclipse.kapua.service.authorization.access.AccessInfo;
 import org.eclipse.kapua.service.authorization.access.AccessInfoService;
 import org.eclipse.kapua.service.authorization.access.AccessPermissionAttributes;
 import org.eclipse.kapua.service.authorization.access.AccessRole;
-import org.eclipse.kapua.service.authorization.access.AccessRoleAttributes;
 import org.eclipse.kapua.service.authorization.access.AccessRoleCreator;
 import org.eclipse.kapua.service.authorization.access.AccessRoleFactory;
 import org.eclipse.kapua.service.authorization.access.AccessRoleListResult;
@@ -43,16 +40,21 @@ import org.eclipse.kapua.service.authorization.access.AccessRoleQuery;
 import org.eclipse.kapua.service.authorization.access.AccessRoleService;
 import org.eclipse.kapua.service.authorization.role.Role;
 import org.eclipse.kapua.service.authorization.role.RoleService;
-import org.eclipse.kapua.service.user.User;
-import org.eclipse.kapua.service.user.UserService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
+import com.extjs.gxt.ui.client.Style.SortDir;
+import com.extjs.gxt.ui.client.data.BasePagingLoadResult;
+import com.extjs.gxt.ui.client.data.PagingLoadConfig;
+import com.extjs.gxt.ui.client.data.PagingLoadResult;
+import org.apache.commons.lang3.StringUtils;
 
 public class GwtAccessRoleServiceImpl extends KapuaRemoteServiceServlet implements GwtAccessRoleService {
 
     private static final long serialVersionUID = 3606053200278262228L;
+    private KapuaLocator locator = KapuaLocator.getInstance();
+    private final RoleService roleService = locator.getService(RoleService.class);
+    private final AccessInfoService accessInfoService = locator.getService(AccessInfoService.class);
+    private final AccessRoleService accessRoleService = locator.getService(AccessRoleService.class);
+    private final AccessRoleFactory accessRoleFactory = locator.getFactory(AccessRoleFactory.class);
 
     @Override
     public GwtAccessRole create(GwtXSRFToken xsrfToken, GwtAccessRoleCreator gwtAccessRoleCreator) throws GwtKapuaException {
@@ -117,18 +119,9 @@ public class GwtAccessRoleServiceImpl extends KapuaRemoteServiceServlet implemen
         if (userShortId != null) {
 
             try {
-                KapuaLocator locator = KapuaLocator.getInstance();
-                RoleService roleService = locator.getService(RoleService.class);
-                AccessInfoService accessInfoService = locator.getService(AccessInfoService.class);
-                AccessRoleService accessRoleService = locator.getService(AccessRoleService.class);
-                AccessRoleFactory accessRoleFactory = locator.getFactory(AccessRoleFactory.class);
-                final UserService userService = locator.getService(UserService.class);
-
                 final KapuaId scopeId = GwtKapuaCommonsModelConverter.convertKapuaId(scopeShortId);
                 KapuaId userId = GwtKapuaCommonsModelConverter.convertKapuaId(userShortId);
-
                 AccessInfo accessInfo = accessInfoService.findByUserId(scopeId, userId);
-
                 if (accessInfo != null) {
                     AccessRoleQuery query = accessRoleFactory.newQuery(scopeId);
                     query.setPredicate(query.attributePredicate(AccessPermissionAttributes.ACCESS_INFO_ID, accessInfo.getId()));
@@ -137,33 +130,18 @@ public class GwtAccessRoleServiceImpl extends KapuaRemoteServiceServlet implemen
                     query.setAskTotalCount(true);
                     String sortField = StringUtils.isEmpty(loadConfig.getSortField()) ? "createdOn" : loadConfig.getSortField();
                     if (sortField.equals("createdOnFormatted")) {
-                        sortField = AccessRoleAttributes.CREATED_ON;
+                        sortField = KapuaEntityAttributes.CREATED_ON;
                     }
-
                     SortOrder sortOrder = loadConfig.getSortDir().equals(SortDir.DESC) ? SortOrder.DESCENDING : SortOrder.ASCENDING;
                     FieldSortCriteria sortCriteria = query.fieldSortCriteria(sortField, sortOrder);
                     query.setSortCriteria(sortCriteria);
                     query.setAskTotalCount(true);
                     AccessRoleListResult accessRoleList = accessRoleService.query(query);
-
                     totalLegnth = accessRoleList.getTotalCount().intValue();
                     if (!accessRoleList.isEmpty()) {
                         for (final AccessRole accessRole : accessRoleList.getItems()) {
-                            User createdByUser = KapuaSecurityUtils.doPrivileged(new Callable<User>() {
-
-                                @Override
-                                public User call() throws Exception {
-                                    return userService.find(accessRole.getScopeId(), accessRole.getCreatedBy());
-                                }
-                            });
                             Role role = roleService.find(scopeId, accessRole.getRoleId());
-
                             GwtAccessRole gwtAccessRole = KapuaGwtAuthorizationModelConverter.mergeRoleAccessRole(role, accessRole);
-
-                            if (createdByUser != null) {
-                                gwtAccessRole.setCreatedByName(createdByUser.getName());
-                            }
-
                             gwtAccessRoles.add(gwtAccessRole);
                         }
                     }
