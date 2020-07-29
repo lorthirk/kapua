@@ -15,10 +15,26 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd"
-        logicalFilePath="KapuaDB/changelog-authentication-1.3.0.xml">
+        logicalFilePath="KapuaDB/account-info-action.xml">
 
-    <include relativeToChangelogFile="true" file="./atht-access_token-expires_index.xml"/>
-    <include relativeToChangelogFile="true" file="./access-token-info-action.xml"/>
-    <include relativeToChangelogFile="true" file="./credential-info-action.xml"/>
+    <property name="selectAccountDomainQuery" value="(SELECT id FROM athz_domain WHERE name = 'account')"/>
+
+    <include relativeToChangelogFile="true" file="../common-properties.xml"/>
+
+    <changeSet id="account-info-action" author="eurotech">
+
+        <preConditions onFail="CONTINUE">
+            <and>
+                <tableExists tableName="athz_domain"/>
+                <tableExists tableName="athz_domain_actions"/>
+            </and>
+        </preConditions>
+
+        <insert tableName="athz_domain_actions">
+            <column name="domain_id" valueComputed="${selectAccountDomainQuery}"/>
+            <column name="action" value="info"/>
+        </insert>
+
+    </changeSet>
 
 </databaseChangeLog>

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2016 Eurotech and/or its affiliates and others
+ * Copyright (c) 2011, 2020 Eurotech and/or its affiliates and others
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -24,6 +24,7 @@ import org.eclipse.kapua.service.KapuaUpdatableEntityService;
  * <li>{@link Actions#delete}: Represent any type of deleting data from the system.</li>
  * <li>{@link Actions#connect}: Represent any type of connect to resources of the system.</li>
  * <li>{@link Actions#execute}: Represent any type of execution of task in the system.</li>
+ * <li>{@link Actions#info}: Represents the permission to obtain cross-entity information.</li>
  * </ul>
  *
  * @since 1.0.0
@@ -82,5 +83,17 @@ public enum Actions {
      *
      * @since 1.0.0
      */
-    execute,;
+    execute,
+
+    /**
+     * Represents the permission to obtain cross-entity information, included (but not limited to):
+     * <ul>
+     *     <li>Usernames for the {@code createdBy} and {@code modifiedBy} users</li>
+     *     <li>Username of the last connected and reserved users in a Connection</li>
+     *     <li>Client ID of a Job Target</li>
+     * </ul>
+     *
+     * @since 1.3.0
+     */
+    info;
 }

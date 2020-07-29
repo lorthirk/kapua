@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2018, 2019 Eurotech and/or its affiliates and others
+    Copyright (c) 2018, 2020 Eurotech and/or its affiliates and others
 
     All rights reserved. This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v1.0
@@ -17,5 +17,6 @@
 
     <include relativeToChangelogFile="true" file="./1.0.0/changelog-device_management_registry-1.0.0.xml"/>
     <include relativeToChangelogFile="true" file="./1.2.0/changelog-device_management_registry-1.2.0.xml"/>
+    <include relativeToChangelogFile="true" file="./1.3.0/changelog-device_management_registry-1.3.0.xml"/>
 
 </databaseChangeLog>
