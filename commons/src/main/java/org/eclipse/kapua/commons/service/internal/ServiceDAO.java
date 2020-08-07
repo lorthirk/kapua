@@ -11,57 +11,6 @@
  *******************************************************************************/
 package org.eclipse.kapua.commons.service.internal;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.eclipse.kapua.KapuaEntityExistsException;
-import org.eclipse.kapua.KapuaEntityNotFoundException;
-import org.eclipse.kapua.KapuaErrorCodes;
-import org.eclipse.kapua.KapuaException;
-import org.eclipse.kapua.commons.jpa.EntityManager;
-import org.eclipse.kapua.commons.model.AbstractKapuaUpdatableEntity;
-import org.eclipse.kapua.commons.model.id.KapuaEid;
-import org.eclipse.kapua.commons.model.query.predicate.AttributePredicateImpl;
-import org.eclipse.kapua.commons.model.query.predicate.OrPredicateImpl;
-import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
-import org.eclipse.kapua.commons.security.KapuaSession;
-import org.eclipse.kapua.commons.setting.system.SystemSetting;
-import org.eclipse.kapua.commons.setting.system.SystemSettingKey;
-import org.eclipse.kapua.locator.KapuaLocator;
-import org.eclipse.kapua.model.KapuaEntity;
-import org.eclipse.kapua.model.KapuaEntityAttributes;
-import org.eclipse.kapua.model.KapuaUpdatableEntity;
-import org.eclipse.kapua.model.domain.Actions;
-import org.eclipse.kapua.model.domain.Domain;
-import org.eclipse.kapua.model.id.KapuaId;
-import org.eclipse.kapua.model.query.FieldSortCriteria;
-import org.eclipse.kapua.model.query.KapuaListResult;
-import org.eclipse.kapua.model.query.KapuaQuery;
-import org.eclipse.kapua.model.query.SortOrder;
-import org.eclipse.kapua.model.query.predicate.AndPredicate;
-import org.eclipse.kapua.model.query.predicate.AttributePredicate;
-import org.eclipse.kapua.model.query.predicate.AttributePredicate.Operator;
-import org.eclipse.kapua.model.query.predicate.MatchPredicate;
-import org.eclipse.kapua.model.query.predicate.OrPredicate;
-import org.eclipse.kapua.model.query.predicate.QueryPredicate;
-import org.eclipse.kapua.service.authorization.access.AccessInfo;
-import org.eclipse.kapua.service.authorization.access.AccessInfoFactory;
-import org.eclipse.kapua.service.authorization.access.AccessInfoService;
-import org.eclipse.kapua.service.authorization.access.AccessPermission;
-import org.eclipse.kapua.service.authorization.access.AccessPermissionListResult;
-import org.eclipse.kapua.service.authorization.access.AccessPermissionService;
-import org.eclipse.kapua.service.authorization.access.AccessRole;
-import org.eclipse.kapua.service.authorization.access.AccessRoleListResult;
-import org.eclipse.kapua.service.authorization.access.AccessRoleService;
-import org.eclipse.kapua.service.authorization.group.Group;
-import org.eclipse.kapua.service.authorization.group.Groupable;
-import org.eclipse.kapua.service.authorization.permission.Permission;
-import org.eclipse.kapua.service.authorization.role.Role;
-import org.eclipse.kapua.service.authorization.role.RolePermission;
-import org.eclipse.kapua.service.authorization.role.RolePermissionListResult;
-import org.eclipse.kapua.service.authorization.role.RolePermissionService;
-import org.eclipse.kapua.service.authorization.role.RoleService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.annotation.Nullable;
 import javax.persistence.Embedded;
 import javax.persistence.EntityExistsException;
@@ -85,6 +34,55 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.eclipse.kapua.KapuaEntityExistsException;
+import org.eclipse.kapua.KapuaEntityNotFoundException;
+import org.eclipse.kapua.KapuaErrorCodes;
+import org.eclipse.kapua.KapuaException;
+import org.eclipse.kapua.commons.jpa.EntityManager;
+import org.eclipse.kapua.commons.model.AbstractKapuaUpdatableEntity;
+import org.eclipse.kapua.commons.model.id.KapuaEid;
+import org.eclipse.kapua.commons.security.KapuaSecurityUtils;
+import org.eclipse.kapua.commons.security.KapuaSession;
+import org.eclipse.kapua.commons.setting.system.SystemSetting;
+import org.eclipse.kapua.commons.setting.system.SystemSettingKey;
+import org.eclipse.kapua.locator.KapuaLocator;
+import org.eclipse.kapua.model.KapuaEntity;
+import org.eclipse.kapua.model.KapuaEntityAttributes;
+import org.eclipse.kapua.model.KapuaUpdatableEntity;
+import org.eclipse.kapua.model.domain.Actions;
+import org.eclipse.kapua.model.domain.Domain;
+import org.eclipse.kapua.model.id.KapuaId;
+import org.eclipse.kapua.model.query.FieldSortCriteria;
+import org.eclipse.kapua.model.query.KapuaListResult;
+import org.eclipse.kapua.model.query.KapuaQuery;
+import org.eclipse.kapua.model.query.SortOrder;
+import org.eclipse.kapua.model.query.predicate.AndPredicate;
+import org.eclipse.kapua.model.query.predicate.AttributePredicate;
+import org.eclipse.kapua.model.query.predicate.MatchPredicate;
+import org.eclipse.kapua.model.query.predicate.OrPredicate;
+import org.eclipse.kapua.model.query.predicate.QueryPredicate;
+import org.eclipse.kapua.service.authorization.access.AccessInfo;
+import org.eclipse.kapua.service.authorization.access.AccessInfoFactory;
+import org.eclipse.kapua.service.authorization.access.AccessInfoService;
+import org.eclipse.kapua.service.authorization.access.AccessPermission;
+import org.eclipse.kapua.service.authorization.access.AccessPermissionListResult;
+import org.eclipse.kapua.service.authorization.access.AccessPermissionService;
+import org.eclipse.kapua.service.authorization.access.AccessRole;
+import org.eclipse.kapua.service.authorization.access.AccessRoleListResult;
+import org.eclipse.kapua.service.authorization.access.AccessRoleService;
+import org.eclipse.kapua.service.authorization.group.Group;
+import org.eclipse.kapua.service.authorization.group.Groupable;
+import org.eclipse.kapua.service.authorization.permission.Permission;
+import org.eclipse.kapua.service.authorization.role.Role;
+import org.eclipse.kapua.service.authorization.role.RolePermission;
+import org.eclipse.kapua.service.authorization.role.RolePermissionListResult;
+import org.eclipse.kapua.service.authorization.role.RolePermissionService;
+import org.eclipse.kapua.service.authorization.role.RoleService;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ServiceDAO} utility methods.
@@ -582,12 +580,15 @@ public class ServiceDAO {
             OrPredicate orPredicate = (OrPredicate) queryPredicate;
             predicate = handleOrPredicate(orPredicate, binds, cb, userPermissionRoot, entityType);
         } else if (queryPredicate instanceof MatchPredicate) {
-            MatchPredicate<?> matchPredicate = (MatchPredicate<?>) queryPredicate;
-            OrPredicate orPredicate = new OrPredicateImpl();
-            for (String attributeName : matchPredicate.getAttributeNames()) {
-                orPredicate.getPredicates().add(new AttributePredicateImpl<>(attributeName, matchPredicate.getMatchTerm(), Operator.STARTS_WITH_IGNORE_CASE));
+            String connectionUrlResolverType = SYSTEM_SETTING.getString(SystemSettingKey.DB_JDBC_CONNECTION_URL_RESOLVER, "DEFAULT");
+            LOG.debug("DB in use: {}", connectionUrlResolverType);
+            MatchPredicateProcessor matchPredicateProcessor;
+            if ("MariaDB".equals(connectionUrlResolverType)) {
+                matchPredicateProcessor = new FullTextMatchPredicateProcessor();
+            } else {
+                matchPredicateProcessor = new DefaultMatchPredicateProcessor();
             }
-            predicate = handleOrPredicate(orPredicate, binds, cb, userPermissionRoot, entityType);
+            predicate = matchPredicateProcessor.processMatchPredicate((MatchPredicate<?>)queryPredicate, binds, cb, userPermissionRoot, entityType);
         }
         return predicate;
     }
@@ -611,11 +612,11 @@ public class ServiceDAO {
 
     }
 
-    private static <E> Predicate handleOrPredicate(@NotNull OrPredicate orPredicate,
-                                                   @NotNull Map<ParameterExpression, Object> binds,
-                                                   @NotNull CriteriaBuilder cb,
-                                                   @NotNull Root<E> entityRoot,
-                                                   @NotNull EntityType<E> entityType)
+     static <E> Predicate handleOrPredicate(@NotNull OrPredicate orPredicate,
+                                            @NotNull Map<ParameterExpression, Object> binds,
+                                            @NotNull CriteriaBuilder cb,
+                                            @NotNull Root<E> entityRoot,
+                                            @NotNull EntityType<E> entityType)
             throws KapuaException {
 
         Predicate[] jpaOrPredicates =
@@ -894,4 +895,5 @@ public class ServiceDAO {
         SQLException innerExc = (SQLException) cause;
         return SQL_ERROR_CODE_CONSTRAINT_VIOLATION.equals(innerExc.getSQLState());
     }
+
 }

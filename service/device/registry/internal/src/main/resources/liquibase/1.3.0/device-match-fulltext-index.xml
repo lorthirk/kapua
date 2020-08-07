@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2020 Eurotech and/or its affiliates and others
+
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+        Eurotech - initial API and implementation
+ -->
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd"
+  logicalFilePath="KapuaDB/device-match-fulltext-index.xml">
+
+    <changeSet id="device-match-fulltext-index" author="eurotech" dbms="mysql, mariadb">
+        <sql>CREATE FULLTEXT INDEX idx_device_match_fulltext
+             ON dvc_device (
+                client_id,
+                display_name,
+                serial_number,
+                model_id,
+                model_name,
+                bios_version,
+                firmware_version,
+                os_version,
+                jvm_version,
+                osgi_framework_version,
+                app_framework_version,
+                connection_interface,
+                connection_ip
+            );</sql>
+    </changeSet>
+</databaseChangeLog>

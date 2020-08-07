@@ -19,5 +19,6 @@
 
     <include relativeToChangelogFile="true" file="./device_event-index_received_on.xml"/>
     <include relativeToChangelogFile="true" file="./device-match-indexes.xml"/>
+    <include relativeToChangelogFile="true" file="./device-match-fulltext-index.xml"/>
 
 </databaseChangeLog>
