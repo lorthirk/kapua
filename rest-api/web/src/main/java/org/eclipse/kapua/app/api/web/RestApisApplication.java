@@ -22,6 +22,7 @@ import org.eclipse.kapua.app.api.core.MoxyJsonConfigContextResolver;
 import org.eclipse.kapua.commons.util.xml.XmlUtil;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.UriConnegFilter;
@@ -45,8 +46,8 @@ public class RestApisApplication extends ResourceConfig {
         register(RestApiJAXBContextProvider.class);
         register(KapuaSerializableBodyWriter.class);
         register(ListBodyWriter.class);
-        register(MoxyJsonConfigContextResolver.class);
-
+//        register(MoxyJsonConfigContextResolver.class);
+        register(JacksonFeature.class);
         register(new ContainerLifecycleListener() {
 
             @Override

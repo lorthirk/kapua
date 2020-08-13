@@ -18,6 +18,7 @@ import org.eclipse.kapua.app.api.core.exception.model.IllegalNullArgumentExcepti
 import org.eclipse.kapua.app.api.core.exception.model.SubjectUnauthorizedExceptionInfo;
 import org.eclipse.kapua.app.api.core.exception.model.ThrowableInfo;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.CountResult;
+import org.eclipse.kapua.app.api.resources.v1.resources.model.query.RestQuery;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.StorableEntityId;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.data.JsonDatastoreMessage;
 import org.eclipse.kapua.app.api.resources.v1.resources.model.data.JsonMessageQuery;
@@ -251,6 +252,7 @@ public class JaxbContextResolver implements ContextResolver<JAXBContext> {
 
                     // REST API utility models
                     CountResult.class,
+                    RestQuery.class,
 
                     // REST API exception models
                     ThrowableInfo.class,

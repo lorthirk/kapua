@@ -16,6 +16,7 @@ import org.apache.commons.lang.SystemUtils;
 import org.eclipse.kapua.KapuaException;
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
+import org.eclipse.persistence.oxm.json.JsonStructureSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -211,6 +212,17 @@ public class XmlUtil {
             throws JAXBException, XMLStreamException, FactoryConfigurationError, SAXException {
         StringReader sr = new StringReader(s);
         return unmarshalJson(sr, clazz, nsUri);
+    }
+
+    public static <T> T unmarshalJson(JsonStructureSource s, Class<T> clazz, String nsUri)
+            throws JAXBException, XMLStreamException, FactoryConfigurationError, SAXException {
+        JAXBContext context = get();
+        Unmarshaller unmarshaller = context.createUnmarshaller();
+        unmarshaller.setSchema(null);
+        unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+        unmarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
+        T object = unmarshaller.unmarshal(s, clazz).getValue();
+        return object;
     }
 
     /**
