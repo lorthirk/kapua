@@ -1,14 +1,11 @@
 language: java
 
-sudo: required
-
 services:
   - docker
 
 jdk:
-- openjdk8
+  - openjdk8
 
-sudo: false
 dist: trusty
 
 # The cache is stored per-branch
