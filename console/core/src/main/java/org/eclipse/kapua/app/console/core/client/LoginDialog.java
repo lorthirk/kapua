@@ -29,7 +29,9 @@ import com.extjs.gxt.ui.client.widget.toolbar.FillToolItem;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import org.eclipse.kapua.app.console.core.client.messages.ConsoleCoreMessages;
+import org.eclipse.kapua.app.console.core.client.util.CookieUtils;
 import org.eclipse.kapua.app.console.core.shared.model.authentication.GwtLoginCredential;
 import org.eclipse.kapua.app.console.core.shared.service.GwtAuthorizationService;
 import org.eclipse.kapua.app.console.core.shared.service.GwtAuthorizationServiceAsync;
@@ -64,13 +66,7 @@ public class LoginDialog extends Dialog {
 
     private boolean allowMainScreen;
 
-    public void setAllowMainScreen(boolean main) {
-        this.allowMainScreen = main;
-    }
-
-    public boolean isAllowMainScreen() {
-        return this.allowMainScreen;
-    }
+    private final TwoFADialog twoFADialog = new TwoFADialog(this);
 
     public LoginDialog() {
         FormLayout layout = new FormLayout();
@@ -96,10 +92,10 @@ public class LoginDialog extends Dialog {
                 validate();
                 if (
                         event.getKeyCode() == 13 &&
-                        username.getValue() != null &&
-                        username.getValue().trim().length() > 0 &&
-                        password.getValue() != null &&
-                        password.getValue().trim().length() > 0) {
+                                username.getValue() != null &&
+                                username.getValue().trim().length() > 0 &&
+                                password.getValue() != null &&
+                                password.getValue().trim().length() > 0) {
                     onSubmit();
                 }
             }
@@ -147,8 +143,44 @@ public class LoginDialog extends Dialog {
 
     }
 
+    public boolean isAllowMainScreen() {
+        return this.allowMainScreen;
+    }
+
+    public void setAllowMainScreen(boolean main) {
+        this.allowMainScreen = main;
+    }
+
     public GwtSession getCurrentSession() {
         return currentSession;
+    }
+
+    public void setCurrentSession(GwtSession currentSession) {
+        this.currentSession = currentSession;
+    }
+
+    public TextField<String> getUsername() {
+        return username;
+    }
+
+    public void setUsername(TextField<String> username) {
+        this.username = username;
+    }
+
+    public TextField<String> getPassword() {
+        return password;
+    }
+
+    public void setPassword(TextField<String> password) {
+        this.password = password;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     @Override
@@ -224,30 +256,76 @@ public class LoginDialog extends Dialog {
      * Login submit
      */
     protected void onSubmit() {
-        if (username.getValue() == null && password.getValue() == null) {
-            ConsoleInfo.display(MSGS.dialogError(), MSGS.usernameAndPasswordRequired());
-            password.markInvalid(password.getErrorMessage());
-        } else if (username.getValue() == null) {
-            ConsoleInfo.display(MSGS.dialogError(), MSGS.usernameFieldRequired());
-        } else if (password.getValue() == null) {
-            ConsoleInfo.display(MSGS.dialogError(), MSGS.passwordFieldRequired());
-            password.markInvalid(password.getErrorMessage());
-        } else {
-            status.show();
-            getButtonBar().disable();
-            username.disable();
-            password.disable();
-            performLogin();
-        }
+        gwtAuthorizationService.has2fa(username.getValue(), new AsyncCallback<Boolean>() {
+
+            @Override
+            public void onFailure(Throwable caught) {
+                FailureHandler.handle(caught);
+            }
+
+            @Override
+            public void onSuccess(Boolean has2FAAuth) {
+                if (username.getValue() == null && password.getValue() == null) {
+                    ConsoleInfo.display(MSGS.dialogError(), MSGS.usernameAndPasswordRequired());
+                    password.markInvalid(password.getErrorMessage());
+                } else if (username.getValue() == null) {
+                    ConsoleInfo.display(MSGS.dialogError(), MSGS.usernameFieldRequired());
+                } else if (password.getValue() == null) {
+                    ConsoleInfo.display(MSGS.dialogError(), MSGS.passwordFieldRequired());
+                    password.markInvalid(password.getErrorMessage());
+                } else {
+                    status.show();
+                    getButtonBar().disable();
+                    username.disable();
+                    password.disable();
+
+                    // Open the 2FA if needed
+                    if (has2FAAuth) {
+                        // trust cookie test
+                        boolean existTrustCookie = CookieUtils.isCookieEnabled(CookieUtils.KAPUA_COOKIE_TRUST + username.getValue());
+                        if (existTrustCookie) {
+                            status.show();
+                            getButtonBar().disable();
+
+                            CookieUtils cookie = new CookieUtils(username.getValue());
+                            String trustKey = cookie.getTrustKeyCookie();
+                            if (trustKey != null) {
+                                if (!"".equals(trustKey)) {
+                                    // trust login
+                                    performLogin(trustKey);
+                                }
+                            } else {
+                                performLogin();
+                            }
+                        } else {
+                            twoFADialog.show();
+                        }
+                    } else {
+                        // remove obsolete trust cookie if exists
+                        CookieUtils.removeCookie(CookieUtils.KAPUA_COOKIE_TRUST + username.getValue());
+
+                        status.show();
+                        getButtonBar().disable();
+
+                        performLogin();
+                    }
+                }
+            }
+
+        });
     }
 
     // Login
     public void performLogin() {
+        performLogin(null);
+    }
+
+    public void performLogin(String trustKey) {
 
         GwtLoginCredential credentials = new GwtLoginCredential(username.getValue(), password.getValue());
+        credentials.setTrustKey(trustKey);
 
-        // FIXME: use some Credentials object instead of using GwtUser!
-        gwtAuthorizationService.login(credentials, new AsyncCallback<GwtSession>() {
+        gwtAuthorizationService.login(credentials, false, new AsyncCallback<GwtSession>() {
 
             @Override
             public void onFailure(Throwable caught) {
@@ -295,10 +373,10 @@ public class LoginDialog extends Dialog {
         login.setEnabled(true);
         reset.setEnabled(hasValue(username) &&
                 hasValue(password));
-        if(hasValue(username)) {
+        if (hasValue(username)) {
             username.clearInvalid();
         }
-        if(hasValue(password)) {
+        if (hasValue(password)) {
             password.clearInvalid();
         }
     }
