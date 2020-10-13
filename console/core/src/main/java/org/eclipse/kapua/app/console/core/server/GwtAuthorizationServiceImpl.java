@@ -45,6 +45,7 @@ import org.eclipse.kapua.service.authentication.AuthenticationService;
 import org.eclipse.kapua.service.authentication.CredentialsFactory;
 import org.eclipse.kapua.service.authentication.JwtCredentials;
 import org.eclipse.kapua.service.authentication.UsernamePasswordCredentials;
+import org.eclipse.kapua.service.authentication.credential.mfa.MfaCredentialOption;
 import org.eclipse.kapua.service.authentication.credential.mfa.MfaCredentialOptionService;
 import org.eclipse.kapua.service.authentication.registration.RegistrationService;
 import org.eclipse.kapua.service.authentication.shiro.KapuaAuthenticationErrorCodes;
@@ -291,6 +292,7 @@ public class GwtAuthorizationServiceImpl extends KapuaRemoteServiceServlet imple
 
         gwtSession.setUserName(gwtUser.getUsername());
         gwtSession.setUserDisplayName(gwtUser.getDisplayName());
+        gwtSession.setAccountName(gwtAccount.getName());
         gwtSession.setRootAccountName(gwtAccount.getName());
         gwtSession.setSelectedAccountName(gwtAccount.getName());
 
@@ -299,6 +301,19 @@ public class GwtAuthorizationServiceImpl extends KapuaRemoteServiceServlet imple
 
         // Setting Id token
         gwtSession.setSsoIdToken(kapuaSession.getOpenIDidToken());
+
+        MfaCredentialOption mfaCredentialOption = KapuaSecurityUtils.doPrivileged(new Callable<MfaCredentialOption>() {
+
+            @Override
+            public MfaCredentialOption call() throws Exception {
+                return MFA_CREDENTIAL_OPTION_SERVICE.findByUserId(user.getScopeId(), user.getId());
+            }
+
+        });
+
+        if (mfaCredentialOption != null) {
+            gwtSession.setTrustKey(mfaCredentialOption.getTrustKey());
+        }
 
         //
         // Load permissions
