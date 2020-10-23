@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.eclipse.kapua.app.console.core.client;
 
+import java.util.logging.Logger;
+
 import org.eclipse.kapua.app.console.core.client.messages.ConsoleCoreMessages;
 import org.eclipse.kapua.app.console.module.api.client.util.CookieUtils;
 import org.eclipse.kapua.app.console.core.shared.model.authentication.GwtLoginCredential;
@@ -189,12 +191,13 @@ public class MfaLoginDialog extends Dialog {
         back.addSelectionListener(new SelectionListener<ButtonEvent>() {
 
             public void componentSelected(ButtonEvent ce) {
+                Logger logger = Logger.getLogger("MFA");
+                logger.severe("flag set");
                 status.hide();
 
                 reset();
                 MfaLoginDialog.this.hide();
 
-                loginDialog.getUsername().focus();
                 loginDialog.getStatus().hide();
                 loginDialog.getButtonBar().enable();
 

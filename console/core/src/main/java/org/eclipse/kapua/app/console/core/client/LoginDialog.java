@@ -11,6 +11,8 @@
  *******************************************************************************/
 package org.eclipse.kapua.app.console.core.client;
 
+import java.util.logging.Logger;
+
 import com.extjs.gxt.ui.client.Style.HorizontalAlignment;
 import com.extjs.gxt.ui.client.event.BaseEvent;
 import com.extjs.gxt.ui.client.event.ButtonEvent;
@@ -69,6 +71,8 @@ public class LoginDialog extends Dialog {
 
     private final MfaLoginDialog mfaLoginDialog = new MfaLoginDialog(this);
 
+    private boolean backFromMfa;
+
     public LoginDialog() {
         FormLayout layout = new FormLayout();
 
@@ -90,17 +94,25 @@ public class LoginDialog extends Dialog {
 
             @Override
             public void componentKeyUp(ComponentEvent event) {
+                Logger logger = Logger.getLogger("Login");
 
-                validate();
-                if (
-                        event.getKeyCode() == 13 &&
-                                username.getValue() != null &&
-                                username.getValue().trim().length() > 0 &&
-                                password.getValue() != null &&
-                                password.getValue().trim().length() > 0) {
-                    onSubmit();
+                logger.severe(Boolean.toString(LoginDialog.this.isVisible()));
+                logger.severe(Boolean.toString(LoginDialog.this.isVisible(false)));
+
+                if (backFromMfa) {
+                    backFromMfa = false;
+                } else {
+                    validate();
+                    if (event.getKeyCode() == 13 &&
+                        username.getValue() != null &&
+                        username.getValue().trim().length() > 0 &&
+                        password.getValue() != null &&
+                        password.getValue().trim().length() > 0) {
+                            onSubmit();
+                    }
                 }
             }
+
         };
 
         Listener<BaseEvent> changeListener = new Listener<BaseEvent>() {
@@ -116,6 +128,7 @@ public class LoginDialog extends Dialog {
         username.addKeyListener(keyListener);
         username.setAllowBlank(false);
         username.addListener(Events.OnBlur, changeListener);
+        setFocusWidget(username);
 
         add(username);
 
@@ -181,6 +194,14 @@ public class LoginDialog extends Dialog {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public boolean isBackFromMfa() {
+        return backFromMfa;
+    }
+
+    public void setBackFromMfa(boolean backFromMfa) {
+        this.backFromMfa = backFromMfa;
     }
 
     @Override
@@ -304,6 +325,7 @@ public class LoginDialog extends Dialog {
                                 performLogin();
                             }
                         } else {
+                            hide();
                             mfaLoginDialog.show();
                         }
                     } else {
