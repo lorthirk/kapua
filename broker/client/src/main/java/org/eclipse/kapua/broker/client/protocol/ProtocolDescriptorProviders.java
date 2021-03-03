@@ -14,7 +14,6 @@ package org.eclipse.kapua.broker.client.protocol;
 
 import java.util.ServiceLoader;
 
-import org.eclipse.kapua.broker.client.protocol.ProtocolDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

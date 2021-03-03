@@ -12,6 +12,7 @@
  *******************************************************************************/
 package org.eclipse.kapua.broker.client.setting;
 
+import org.eclipse.kapua.broker.client.protocol.ProtocolDescriptor;
 import org.eclipse.kapua.commons.setting.SettingKey;
 
 /**
@@ -39,7 +40,7 @@ public enum BrokerClientSettingKey implements SettingKey {
      */
     DISABLE_DEFAULT_PROTOCOL_DESCRIPTOR("protocol_descriptor.default.disable"),
     /**
-     * A URI to a configuration file for providing additional {@link ConnectorDescriptor} configurations
+     * A URI to a configuration file for providing additional {@link ProtocolDescriptor} configurations
      */
     CONFIGURATION_URI("protocol_descriptor.configuration.uri");
 

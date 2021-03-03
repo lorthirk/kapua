@@ -20,7 +20,7 @@ import org.eclipse.kapua.commons.setting.AbstractKapuaSetting;
  */
 public final class BrokerClientSetting extends AbstractKapuaSetting<BrokerClientSettingKey> {
 
-    private static final String CONFIG_RESOURCE_NAME = "kapua-broker-setting.properties";
+    private static final String CONFIG_RESOURCE_NAME = "kapua-broker-client-setting.properties";
 
     private static BrokerClientSetting instance;
 

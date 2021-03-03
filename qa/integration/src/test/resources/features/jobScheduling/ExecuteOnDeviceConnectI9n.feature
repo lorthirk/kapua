@@ -17,7 +17,7 @@
 Feature: JobEngineService execute job on device connect
 
 @setup
-  Scenario: Start full full docker environment
+  Scenario: Start full docker environment
     Given Init Jaxb Context
     And Init Security Context
     And Start full docker environment
@@ -190,9 +190,8 @@ Feature: JobEngineService execute job on device connect
     When KuraMock is disconnected
     And I wait 1 second
     Then Device status is "DISCONNECTED"
-    When I login as user with name "kapua-sys" and password "kapua-password"
     And I select account "kapua-sys"
-    And I get the KuraMock device
+    And I get the KuraMock device after 5 seconds
     When I search for events from device "rpione3" in account "kapua-sys"
     Then I find 2 device event
     And The type of the last event is "DEATH"

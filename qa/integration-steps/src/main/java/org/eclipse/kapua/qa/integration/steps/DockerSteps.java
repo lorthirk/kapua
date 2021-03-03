@@ -60,7 +60,7 @@ public class DockerSteps {
     private static final Logger logger = LoggerFactory.getLogger(DockerSteps.class);
 
     private static final String NETWORK_PREFIX = "kapua-net";
-    private static final String KAPUA_VERSION = "1.4.0-SNAPSHOT";
+    private static final String KAPUA_VERSION = "1.5.0-CAMEL-SNAPSHOT";
     private static final String ES_IMAGE = "elasticsearch:6.8.7";
     private static final List<String> DEFAULT_DEPLOYMENT_CONTAINERS_NAME;
     private static final int WAIT_COUNT = 120;//total wait time = 240 secs (120 * 2000ms)
@@ -68,6 +68,7 @@ public class DockerSteps {
     private static final long WAIT_FOR_DB = 10000;
     private static final long WAIT_FOR_ES = 10000;
     private static final long WAIT_FOR_EVENTS_BROKER = 10000;
+    private static final long WAIT_FOR_JOB_ENGINE = 10000;
     private static final long WAIT_FOR_BROKER = 60000;
     private static final int HTTP_COMMUNICATION_TIMEOUT = 3000;
 
@@ -87,6 +88,7 @@ public class DockerSteps {
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("telemetry-consumer");
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("lifecycle-consumer");
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("message-broker");
+        DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("job-engine");
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("events-broker");
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("es");
         DEFAULT_DEPLOYMENT_CONTAINERS_NAME.add("db");
@@ -200,6 +202,11 @@ public class DockerSteps {
             startEventBrokerContainer("events-broker");
             synchronized (this) {
                 this.wait(WAIT_FOR_EVENTS_BROKER);
+            }
+
+            startJobEngineContainer("job-engine");
+            synchronized (this) {
+                this.wait(WAIT_FOR_JOB_ENGINE);
             }
 
             startMessageBrokerContainer("message-broker");
@@ -390,6 +397,19 @@ public class DockerSteps {
         DockerUtil.getDockerClient().connectToNetwork(containerId, networkId);
         containerMap.put(name, containerId);
         logger.info("EventBroker container started: {}", containerId);
+    }
+
+    @And("^Start JobEngine container with name \"(.*)\"$")
+    public void startJobEngineContainer(String name) throws DockerException, InterruptedException {
+        logger.info("Starting Job Engine container {}...", name);
+        ContainerConfig mbConfig = getJobEngineContainerConfig();
+        ContainerCreation mbContainerCreation = DockerUtil.getDockerClient().createContainer(mbConfig, name);
+        String containerId = mbContainerCreation.id();
+
+        DockerUtil.getDockerClient().startContainer(containerId);
+        DockerUtil.getDockerClient().connectToNetwork(containerId, networkId);
+        containerMap.put(name, containerId);
+        logger.info("Job Engine {} container started: {}", name, containerId);
     }
 
     @And("^Start MessageBroker container with name \"(.*)\"$")
@@ -657,6 +677,24 @@ public class DockerSteps {
                 .hostConfig(hostConfig)
                 .exposedPorts(String.valueOf(brokerPort))
                 .image("kapua/kapua-events-broker:" + KAPUA_VERSION)
+                .build();
+    }
+
+    /**
+     * Creation of docker container configuration for job engine.
+     *
+     * @return Container configuration for job engine instance.
+     */
+    private ContainerConfig getJobEngineContainerConfig() {
+        final int jobEnginePort = 8080;
+        final Map<String, List<PortBinding>> portBindings = new HashMap<>();
+        addHostPort(ALL_IP, portBindings, jobEnginePort, jobEnginePort);
+        final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+
+        return ContainerConfig.builder()
+                .hostConfig(hostConfig)
+                .exposedPorts(String.valueOf(jobEnginePort))
+                .image("kapua/kapua-job-engine:" + KAPUA_VERSION)
                 .build();
     }
 

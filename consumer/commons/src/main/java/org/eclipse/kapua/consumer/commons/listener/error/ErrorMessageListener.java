@@ -19,7 +19,6 @@ import java.util.Date;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.camel.spi.UriEndpoint;
-import org.eclipse.kapua.KapuaException;
 import org.eclipse.kapua.broker.client.message.CamelKapuaMessage;
 import org.eclipse.kapua.broker.client.message.MessageConstants;
 import org.eclipse.kapua.commons.util.KapuaDateUtils;
@@ -64,7 +63,6 @@ public class ErrorMessageListener extends AbstractListener {
      *
      * @param exchange
      * @param message
-     * @throws KapuaException
      */
     public void processMessage(Exchange exchange, Object message) {
         metricError.inc();

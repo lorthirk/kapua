@@ -19,14 +19,14 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(JUnitTests.class)
-public class DefaultBrokerIpResolverTest extends Assert {
+public class DefaultBrokerIpResolverTest {
 
     @Test
     public void defaultBrokerIpResolverTest() throws KapuaException {
         System.setProperty("broker.ip", "192.168.33.10");
         DefaultBrokerIpResolver defaultBrokerIpResolver = new DefaultBrokerIpResolver();
 
-        assertEquals("Expected and actual values should be the same", "192.168.33.10", defaultBrokerIpResolver.getBrokerIpOrHostName());
+        Assert.assertEquals("Expected and actual values should be the same", "192.168.33.10", defaultBrokerIpResolver.getBrokerIpOrHostName());
     }
 
     @Test(expected = KapuaException.class)

@@ -23,13 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is needed by {@link org.eclipse.kapua.broker.core.plugin.KapuaSecurityBrokerFilter} to handle a vm connection.<BR>
- * Indeed this bundle is instantiated during the broker startup then if {@link org.eclipse.kapua.broker.core.plugin.KapuaSecurityBrokerFilter} try to instantiate a connection receive an error from the
- * broker. (the vm factory couldn't
- * reach the broker)<BR>
+ * This class is needed by KapuaSecurityBrokerFilter to handle a vm connection.<BR>
+ * Indeed this bundle is instantiated during the broker startup then if KapuaSecurityBrokerFilter try to instantiate a connection receive an error from the
+ * broker. (the vm factory couldn't reach the broker)<BR>
  * Then this class is needed to instantiate only a connection to be useful for the filter when it need
- * ({@link org.eclipse.kapua.broker.core.plugin.KapuaSecurityBrokerFilter#addConnection(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.ConnectionInfo) add connection} and
- * {@link org.eclipse.kapua.broker.core.plugin.KapuaSecurityBrokerFilter#removeConnection(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.ConnectionInfo, Throwable) remove
+ * (KapuaSecurityBrokerFilter#addConnection(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.ConnectionInfo) add connection} and
+ * KapuaSecurityBrokerFilter#removeConnection(org.apache.activemq.broker.ConnectionContext, org.apache.activemq.command.ConnectionInfo, Throwable) remove
  * connection}).<BR>
  * <BR>
  *

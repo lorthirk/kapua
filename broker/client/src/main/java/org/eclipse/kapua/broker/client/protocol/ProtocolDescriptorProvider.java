@@ -12,8 +12,6 @@
  *******************************************************************************/
 package org.eclipse.kapua.broker.client.protocol;
 
-import org.eclipse.kapua.broker.client.protocol.ProtocolDescriptor;
-
 /**
  * A provider for {@link ProtocolDescriptor} instances
  */

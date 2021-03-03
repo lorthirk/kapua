@@ -40,6 +40,7 @@ import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionA
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionFactory;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionQuery;
 import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerDefinitionService;
+import org.eclipse.kapua.service.scheduler.trigger.definition.TriggerProperty;
 
 import javax.inject.Inject;
 import java.text.ParseException;

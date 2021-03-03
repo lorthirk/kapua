@@ -40,16 +40,16 @@ import java.util.Properties;
  * </p>
  * <h2>Extra configuration</h2>
  * <p>
- * It is possible to provide a URI to the system using the configuration key {@link ConsumerSettingKey#CONFIGURATION_URI}
+ * It is possible to provide a URI to the system using the configuration key {@link BrokerClientSettingKey#CONFIGURATION_URI}
  * which has to point to a standard Java properties file of the following format:
  * </p>
- * <code><pre>
+ * <code>
  * transports=foo,bar,baz
  * foo.device.APP=full.qualified.ClassName
  * foo.kapua.APP=full.qualified.ClassName
  * bar.device.APP=full.qualified.ClassName
  * bar.kapua.APP=full.qualified.ClassName
- * </pre></code>
+ * </code>
  * <p>
  * The property {@code transports} holds a comma separated list of all transports by name. For each transport it will
  * look up all keys of {@code<transport>.[device|kapua].<MessageType>}, where {@code MessageType} are all values of
@@ -60,7 +60,7 @@ import java.util.Properties;
  * <p>
  * By default this implementation will return first from the configured transport name and then always
  * return a hard coded default provider. If this default provided should not be returned it is possible
- * to disable this by using the settings key {@link ConsumerSettingKey#DISABLE_DEFAULT_PROTOCOL_DESCRIPTOR}.
+ * to disable this by using the settings key {@link BrokerClientSettingKey#DISABLE_DEFAULT_PROTOCOL_DESCRIPTOR}.
  * </p>
  */
 public class DefaultProtocolDescriptionProvider implements ProtocolDescriptorProvider {

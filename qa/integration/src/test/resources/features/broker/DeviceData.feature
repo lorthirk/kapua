@@ -31,7 +31,7 @@ Feature: Device data scenarios
 
     When I start the simulator
 
-    Then Device sim-1 for account kapua-sys is registered after 10 seconds
+    Then Device sim-1 for account kapua-sys is registered after 15 seconds
     And I expect the device to report the applications
       | DEPLOY-V2 |
       | CMD-V1    |
@@ -63,16 +63,10 @@ Feature: Device data scenarios
     And  I expect the latest captured message on channel "my-app-1/my-topic-5/data" to have the metrics
       | key         | type    | value |
       | foo.boolean | BOOLEAN | true  |
-
-  Then Device sim-1 for account kapua-sys is registered after 15 seconds
-
-
-
+    Then Device sim-1 for account kapua-sys is registered after 15 seconds
     When I stop the simulator
     Then Device sim-1 for account kapua-sys is not registered after 5 seconds
     And I delete the messages for this device
-
-
 
 @teardown
   Scenario: Stop docker environment

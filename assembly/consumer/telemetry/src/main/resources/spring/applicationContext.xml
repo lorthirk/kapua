@@ -50,7 +50,7 @@
 
     <bean id="kapuaDataConverter" class="org.eclipse.kapua.consumer.telemetry.converter.KapuaDataConverter"/>
     <bean id="dataStorageMessageProcessor" class="org.eclipse.kapua.consumer.telemetry.listener.DataStorageMessageProcessor"/>
-    <bean id="errorMessageListener" class="org.eclipse.kapua.consumer.commons.listener.ErrorMessageListener"/>
+    <bean id="errorMessageListener" class="org.eclipse.kapua.consumer.commons.listener.error.ErrorMessageListener"/>
 
     <bean id="jaxbContextLoader" class="org.eclipse.kapua.consumer.commons.xml.ConsumerJAXBContextLoader"
         init-method="init"/>
