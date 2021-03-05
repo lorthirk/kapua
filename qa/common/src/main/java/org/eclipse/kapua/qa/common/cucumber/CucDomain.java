@@ -59,14 +59,6 @@ public class CucDomain {
         this.name = name;
     }
 
-    public String getServiceName() {
-        return serviceName;
-    }
-
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
-
     public void setActionSet(Set<Actions> actionSet) {
         this.actionSet = actionSet;
     }

@@ -49,8 +49,6 @@ public class DomainDAO extends ServiceDAO {
             domain.setActions(creator.getActions());
         }
 
-        domain.setServiceName(creator.getServiceName());
-
         return ServiceDAO.create(em, domain);
     }
 

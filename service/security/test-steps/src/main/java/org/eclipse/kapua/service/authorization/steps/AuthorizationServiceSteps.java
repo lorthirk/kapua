@@ -719,7 +719,6 @@ public class AuthorizationServiceSteps extends TestBase {
             tmpDom.doParse();
 
             domainCreator = domainFactory.newCreator(tmpDom.getName());
-            domainCreator.setServiceName(tmpDom.getServiceName());
             if (tmpDom.getActionSet() != null) {
                 domainCreator.setActions(tmpDom.getActionSet());
             }
