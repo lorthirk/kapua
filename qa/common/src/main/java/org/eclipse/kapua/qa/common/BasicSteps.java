@@ -68,21 +68,21 @@ public class BasicSteps extends TestBase {
     public void initParametersDocker(Scenario scenario) {
         logger.info("=====> Init parameters for docker environment...");
         setProperties(scenario, "kapuadb", "true", "localhost", "3306", "DEFAULT", "org.h2.Driver",
-            "jdbc:h2:tcp", "certificates/jwt/test.key", "certificates/jwt/test.cert", "localhost");
+            "jdbc:h2:tcp", "certificates/jwt/test.key", "certificates/jwt/test.cert", "localhost", "MODE=MySQL");
         logger.info("=====> Init parameters for docker environment... DONE");
     }
 
     @Before(value="@setup and (@env_embedded_minimal or @env_none)", order=0)
     public void initParametersEmbedded(Scenario scenario) {
         logger.info("=====> Init parameters for embedded environment...");
-        setProperties(scenario, "kapuadb", "true", "", "", "H2", "org.h2.Driver", "jdbc:h2:mem;MODE=MySQL",
-            "certificates/jwt/test.key", "certificates/jwt/test.cert", "localhost");
+        setProperties(scenario, "kapuadb", "true", "", "", "H2", "org.h2.Driver", "jdbc:h2:mem:",
+            "certificates/jwt/test.key", "certificates/jwt/test.cert", "localhost", null);
         logger.info("=====> Init parameters for embedded environment... DONE");
     }
 
     private void setProperties(Scenario scenario, String schema, String updateSchema,
             String dbHost, String dbPort, String dbConnResolver, String dbDriver, String jdbcConnection,
-            String jwtKey, String jwtCertificate, String brokerIp) {
+            String jwtKey, String jwtCertificate, String brokerIp, String additionalOptions) {
         SystemSetting.resetInstance();
         System.setProperty(SystemSettingKey.DB_SCHEMA.key(), schema);
         System.setProperty(SystemSettingKey.DB_SCHEMA_UPDATE.key(), updateSchema);
@@ -91,6 +91,9 @@ public class BasicSteps extends TestBase {
         System.setProperty(SystemSettingKey.DB_JDBC_CONNECTION_URL_RESOLVER.key(), dbConnResolver);
         System.setProperty(SystemSettingKey.DB_JDBC_DRIVER.key(), dbDriver);
         System.setProperty(SystemSettingKey.DB_CONNECTION_SCHEME.key(), jdbcConnection);
+        if (additionalOptions!=null) {
+            System.setProperty(SystemSettingKey.DB_CONNECTION_ADDITIONAL_OPTIONS.key(), additionalOptions);
+        }
         System.setProperty("certificate.jwt.private.key", jwtKey);
         System.setProperty("certificate.jwt.certificate", jwtCertificate);
         System.setProperty("broker.ip", brokerIp);

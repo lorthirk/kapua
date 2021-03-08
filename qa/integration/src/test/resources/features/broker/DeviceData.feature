@@ -31,7 +31,7 @@ Feature: Device data scenarios
 
     When I start the simulator
 
-    Then Device sim-1 for account kapua-sys is registered after 15 seconds
+    Then Device sim-1 for account kapua-sys is registered after 30 seconds
     And I expect the device to report the applications
       | DEPLOY-V2 |
       | CMD-V1    |
